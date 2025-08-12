@@ -6,17 +6,22 @@ const showOnlyImportant = ref(false);
 const selectedSource = ref('All Notes');
 
 const sortColumn = ref('');
-const sortOrder = ref('asc'); 
+const sortOrder = ref('asc');
 
 const newNoteText = ref('');
 const selectedPreset = ref('');
 
-const presetMessages = [
+// New reactive properties for preset creation
+const newPresetName = ref('');
+const newPresetMessage = ref('');
+const showPresetCreation = ref(false);
+
+const presetMessages = ref([
   { label: '-- Select a preset --', value: '' },
   { label: 'Follow up with client', value: 'Followed up with client regarding the recent discussion.' },
   { label: 'Document sent for signature', value: 'Sent the required document for signature via email.' },
   { label: 'Reminder to review application', value: 'This is a reminder to review the new application by the end of the day.' },
-];
+]);
 
 const originalNotes = ref([
   {
@@ -114,6 +119,16 @@ const displayedNotes = computed(() => {
 
   return sortData(filtered);
 });
+
+// Method to save the new preset
+const saveNewPreset = () => {
+  if (newPresetName.value && newPresetMessage.value) {
+    presetMessages.value.push({ label: newPresetName.value, value: newPresetMessage.value });
+    newPresetName.value = '';
+    newPresetMessage.value = '';
+    showPresetCreation.value = false;
+  }
+};
 </script>
 
 <template>
@@ -128,7 +143,39 @@ const displayedNotes = computed(() => {
       </option>
     </select>
     
-    <label for="note" class="dark:text-white text-gray-800 mb-2 block">Add a new note</label>
+    <button 
+      @click="showPresetCreation = !showPresetCreation"
+      class="dark:bg-darkGreen bg-pigmentGreen border dark:border-lightGreen border-lightGreen dark:text-lightGreen text-white font-bold mb-4 px-4 py-2 rounded-xl shadow-outer"
+    >
+      Create a Preset Note
+    </button>
+    
+    <div v-if="showPresetCreation" class="mt-4 p-4 border border-gray-300 rounded-lg dark:bg-gray-800">
+      <label for="presetName" class="dark:text-white text-gray-800 mb-2 block">Preset Name</label>
+      <input
+        v-model="newPresetName"
+        id="presetName"
+        type="text"
+        class="w-full p-2 border border-gray-300 rounded-lg bg-white dark:bg-darkBlue text-gray-800 dark:text-white outline-none mb-2"
+      />
+      
+      <label for="presetMessage" class="dark:text-white text-gray-800 mb-2 block">Preset Message</label>
+      <textarea 
+        v-model="newPresetMessage"
+        id="presetMessage" 
+        rows="2" 
+        class="w-full p-2 border border-gray-300 rounded-lg bg-white dark:bg-darkBlue text-gray-800 dark:text-white outline-none resize-none"
+      ></textarea>
+      
+      <button 
+        @click="saveNewPreset"
+        class="dark:bg-darkGreen bg-pigmentGreen border dark:border-lightGreen border-lightGreen dark:text-lightGreen text-white font-bold mt-4 px-4 py-2 rounded-xl shadow-outer"
+      >
+        Save New Preset
+      </button>
+    </div>
+
+    <label for="note" class="dark:text-white text-gray-800 mb-2 block mt-4">Add a new note</label>
     <textarea 
       v-model="newNoteText"
       name="note" 
@@ -141,7 +188,6 @@ const displayedNotes = computed(() => {
      <button class="dark:bg-darkBrown bg-warmYellow/60 border border-darkOrange dark:text-darkOrange text-white font-bold mt-4 px-4 py-2 rounded-xl shadow-outer ml-6">Save as Important</button>
 
     <div class="p-4 bg-white dark:bg-gray-900 rounded-xl shadow-md mt-10">
-      <!-- Top Controls -->
       <div class="flex justify-between flex-wrap items-center gap-4 mb-4">
         <input
           v-model="searchQuery"
@@ -165,7 +211,6 @@ const displayedNotes = computed(() => {
         </div>
       </div>
 
-      <!-- Table -->
       <div class="overflow-x-auto">
         <table class="w-full text-left border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
           <thead class="bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200">
@@ -173,7 +218,6 @@ const displayedNotes = computed(() => {
               <th class="px-4 py-2 cursor-pointer" @click="toggleSort('text')">
                 Notes
                 <v-icon name="md-keyboardarrowup" :active="sortColumn === 'text'" :order="sortOrder" class="inline-block ml-1" />
-                <!-- <SortIcon :active="sortColumn === 'text'" :order="sortOrder" /> -->
               </th>
               <th class="px-4 py-2 cursor-pointer" @click="toggleSort('by')">
                 By
@@ -204,7 +248,6 @@ const displayedNotes = computed(() => {
               <td class="px-4 py-2">{{ note.source }}</td>
               <td class="px-4 py-2 text-center">
                 <button @click="toggleImportant(note)" class="text-yellow-400">
-                  <!-- <v-icon name="bi-star" :fill="note.important ? 'bg-warmYellow' : 'none'" :stroke="note.important ? 'currentColor' : 'currentColor'" class="w-5 h-5" /> -->
                    <v-icon v-if="note.important" name="bi-star-fill" class="w-5 h-5 text-yellow-400" />
                    <v-icon v-else name="bi-star" class="w-5 h-5 text-gray-400" />
                 </button>

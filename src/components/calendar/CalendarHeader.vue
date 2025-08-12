@@ -1,29 +1,58 @@
 <script setup>
-defineProps({
+import { computed } from 'vue';
+
+const props = defineProps({
   currentMonthName: String,
   currentYear: [String, Number],
-  previousMonth: Function,
-  nextMonth: Function,
+  selectedDate: String,
   views: Array,
   activeView: String,
-  isOpen: Boolean
-})
-defineEmits(['update:activeView']);
+  isOpen: Boolean,
+  handlePrevious: Function, // Corrected prop name
+  handleNext: Function,     // Corrected prop name
+});
+
+defineEmits(['update:activeView', 'add-event']);
+
+const headerDateDisplay = computed(() => {
+  if (props.activeView === 'Month') {
+    return `${props.currentMonthName} ${props.currentYear}`;
+  } else {
+    const date = new Date(props.selectedDate);
+    if (props.activeView === 'Day') {
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      return date.toLocaleDateString('en-US', options);
+    }
+    // Week view
+    const startOfWeek = new Date(date);
+    startOfWeek.setDate(date.getDate() - date.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    const startOptions = { month: 'long', day: 'numeric' };
+    const endOptions = { month: 'long', day: 'numeric', year: 'numeric' };
+
+    const startString = startOfWeek.toLocaleDateString('en-US', startOptions);
+    const endString = endOfWeek.toLocaleDateString('en-US', endOptions);
+
+    return `${startString} - ${endString}`;
+  }
+});
 </script>
 
 <template>
   <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
     <div class="flex items-center space-x-2">
-      <button @click="previousMonth" class="p-2 rounded-full hover:bg-gray-200 transition-colors duration-200">
-        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button @click="handlePrevious" class="p-2 rounded-full hover:bg-gray-600 transition-colors duration-200">
+        <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
       </button>
       <div class="text-2xl font-semibold dark:text-white text-gray-800 rounded-md py-1 px-3">
-        {{ currentMonthName }} {{ currentYear }}
+        {{ headerDateDisplay }}
       </div>
-      <button @click="nextMonth" class="p-2 rounded-full hover:bg-gray-200 transition-colors duration-200">
-        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button @click="handleNext" class="p-2 rounded-full hover:bg-gray-600 transition-colors duration-200">
+        <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
         </svg>
       </button>
@@ -64,4 +93,3 @@ defineEmits(['update:activeView']);
     </div>
   </div>
 </template>
-

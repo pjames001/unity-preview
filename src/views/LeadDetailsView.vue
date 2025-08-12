@@ -199,9 +199,9 @@ const currentComponent = computed(() => {
       </div>
 
       <!-- Active Component -->
-      <Transition name="fade" mode="out-in">
+   
         <component :is="currentComponent" :key="activeTab" />
-      </Transition>
+ 
     </div>
   </main>
 </template>

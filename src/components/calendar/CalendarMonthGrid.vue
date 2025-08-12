@@ -29,7 +29,7 @@ const getEventSummary = (events) => {
 
 <template>
   <div>
-    <div class="grid grid-cols-7 text-center text-sm font-medium text-gray-500 mb-2">
+    <div class="grid grid-cols-7 text-center text-sm font-medium dark:text-gray-200 text-gray-700 mb-2">
       <div v-for="day in weekDays" :key="day" class="py-2">{{ day }}</div>
     </div>
     <div class="grid grid-cols-7 gap-2 dark:bg-darkPurple bg-gray-200 rounded-lg overflow-hidden p-2">

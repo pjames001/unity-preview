@@ -217,7 +217,7 @@ const vClickOutside = {
                 </td>
                 <td class="px-4 py-2">{{ schedule.employeesCount }}</td>
                 <td class="px-4 py-2">{{ schedule.updatedAt }}</td>
-                <td class="px-4 py-2 text-center relative">
+                <td class="px-4 py-2 text-center">
                   <div class="inline-block relative">
                     <button
                       @click.stop="toggleActionsMenu(schedule.id, $event)"

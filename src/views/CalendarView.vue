@@ -299,6 +299,50 @@ const nextMonth = () => {
   }
 };
 
+const handlePrevious = () => {
+  if (activeView.value === 'Month') {
+    previousMonth();
+  } else if (activeView.value === 'Day') {
+    previousDay();
+  } else if (activeView.value === 'Week') {
+    previousWeek();
+  }
+};
+
+const handleNext = () => {
+  if (activeView.value === 'Month') {
+    nextMonth();
+  } else if (activeView.value === 'Day') {
+    nextDay();
+  } else if (activeView.value === 'Week') {
+    nextWeek();
+  }
+};
+
+const previousDay = () => {
+  const date = new Date(selectedDate.value);
+  date.setDate(date.getDate() - 1);
+  selectedDate.value = date.toISOString().split('T')[0];
+};
+
+const nextDay = () => {
+  const date = new Date(selectedDate.value);
+  date.setDate(date.getDate() + 1);
+  selectedDate.value = date.toISOString().split('T')[0];
+};
+
+const previousWeek = () => {
+  const date = new Date(selectedDate.value);
+  date.setDate(date.getDate() - 7);
+  selectedDate.value = date.toISOString().split('T')[0];
+};
+
+const nextWeek = () => {
+  const date = new Date(selectedDate.value);
+  date.setDate(date.getDate() + 7);
+  selectedDate.value = date.toISOString().split('T')[0];
+};
+
 const addNewEvent = (dateStr) => {
   const newEvent = {
     id: events.value.length + 1,
@@ -476,8 +520,9 @@ const activeViewComponent = computed(() => {
         <CalendarHeader   
         :currentMonthName="currentMonthName"
         :currentYear="currentYear"
-        :previousMonth="previousMonth"
-        :nextMonth="nextMonth"
+        :selectedDate="selectedDate"
+        :handlePrevious="handlePrevious"
+        :handleNext="handleNext"
         :views="views"
         :activeView="activeView"
         :isOpen="isAddEventModalOpen"

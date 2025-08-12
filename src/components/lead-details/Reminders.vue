@@ -3,7 +3,8 @@ import { ref, computed } from 'vue';
 
 const sortColumn = ref('');
 const sortOrder = ref('asc');
-const openMenu = ref(null);
+const activeMenuId = ref(null);
+const menuPosition = ref({ top: '0px', left: '0px' });
 const filterStatus = ref('all');
 const searchQuery = ref('');
 
@@ -21,7 +22,7 @@ const reminders = ref([
     id: 1,
     name: 'Follow up with John',
     priority: 'High',
-    dueDate: new Date(),
+    dueDate: new Date('2025-08-01T10:00:00'),
     frequency: 'Weekly',
     notes: 'Check progress on contract',
     createdBy: 'Alice',
@@ -31,11 +32,31 @@ const reminders = ref([
     id: 2,
     name: 'Send invoice',
     priority: 'Medium',
-    dueDate: new Date(),
+    dueDate: new Date('2025-07-29T14:00:00'),
     frequency: 'Monthly',
     notes: 'Invoice for July',
     createdBy: 'Bob',
     completed: true
+  },
+   {
+    id: 3,
+    name: 'Review project proposal',
+    priority: 'High',
+    dueDate: new Date('2025-08-05T17:00:00'),
+    frequency: 'Once',
+    notes: 'Urgent review',
+    createdBy: 'Charlie',
+    completed: false
+  },
+  {
+    id: 4,
+    name: 'Update client records',
+    priority: 'Low',
+    dueDate: new Date('2025-08-15T09:00:00'),
+    frequency: 'Bi-annually',
+    notes: 'New contact information',
+    createdBy: 'Dave',
+    completed: false
   }
 ]);
 
@@ -55,12 +76,14 @@ const filteredReminders = computed(() => {
   }
   
   //filtering logic
+  const now = new Date();
   if (filterStatus.value === 'completed') {
     result = result.filter(r => r.completed);
   } else if (filterStatus.value === 'not-completed') {
-    result = result.filter(r => !r.completed);
+    result = result.filter(r => !r.completed && r.dueDate > now);
+  } else if (filterStatus.value === 'failed-to-complete') {
+    result = result.filter(r => !r.completed && r.dueDate <= now);
   }
-  // no filter is applied if filterStatus is 'all'
 
   if (sortColumn.value) {
     result.sort((a, b) => {
@@ -84,8 +107,30 @@ const toggleSort = (column) => {
   }
 };
 
-const toggleMenu = (id) => {
-  openMenu.value = openMenu.value === id ? null : id;
+const toggleMenu = (id, event) => {
+  if (activeMenuId.value === id) {
+    activeMenuId.value = null;
+  } else {
+    const rect = event.currentTarget.getBoundingClientRect();
+    activeMenuId.value = id;
+    menuPosition.value = {
+        top: `${rect.bottom + window.scrollY}px`,
+        left: `${rect.left + window.scrollX}px`,
+    };
+  }
+};
+
+const markAsComplete = () => {
+  const reminder = reminders.value.find(r => r.id === activeMenuId.value);
+  if (reminder) {
+    reminder.completed = true;
+    activeMenuId.value = null; // Close the menu
+  }
+};
+
+const deleteReminder = () => {
+  reminders.value = reminders.value.filter(r => r.id !== activeMenuId.value);
+  activeMenuId.value = null; // Close the menu
 };
 
 const formatDate = (date) => {
@@ -98,14 +143,25 @@ const formatTime = (date) => {
 
 const buttonClass = (active) =>
   `px-3 py-1 text-sm rounded-md ${active ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500'}`;
+
+const vClickOutside = {
+  mounted(el, binding) {
+    el.clickOutsideEvent = (event) => {
+      if (!(el === event.target || el.contains(event.target))) {
+        binding.value();
+      }
+    };
+    document.addEventListener('click', el.clickOutsideEvent);
+  },
+  unmounted(el) {
+    document.removeEventListener('click', el.clickOutsideEvent);
+  },
+};
 </script>
-
-
 
 <template>
   <section class="p-6 my-10 w-full rounded-xl shadow-outer dark:bg-darkBrown bg-warmYellow/70 border border-darkOrange">
     <div class="p-4 bg-white dark:bg-gray-900 rounded-xl shadow-md">
-      <!-- Top Controls -->
       <div class="flex justify-between items-center mb-4">
         <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">Add Reminder</button>
         <div class="space-x-2">
@@ -121,10 +177,13 @@ const buttonClass = (active) =>
             @click="filterStatus = 'completed'"
             :class="buttonClass(filterStatus === 'completed')"
           >Completed</button>
+          <button
+            @click="filterStatus = 'failed-to-complete'"
+            :class="buttonClass(filterStatus === 'failed-to-complete')"
+          >Failed to Complete</button>
         </div>
       </div>
 
-      <!-- search bar -->
       <div class="mb-4">
         <input
           v-model="searchQuery"
@@ -134,7 +193,6 @@ const buttonClass = (active) =>
         />
       </div>
 
-      <!-- Table -->
       <div class="overflow-x-auto">
         <table class="w-full text-left border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
           <thead class="bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200">
@@ -155,7 +213,7 @@ const buttonClass = (active) =>
             <tr
               v-for="reminder in filteredReminders"
               :key="reminder.id"
-              class="border-t dark:bg-darkBlue bg-white border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+              class="border-t dark:bg-darkBlue bg-white border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 relative"
             >
               <td class="px-4 py-2">{{ reminder.name }}</td>
               <td class="px-4 py-2">{{ reminder.priority }}</td>
@@ -165,18 +223,11 @@ const buttonClass = (active) =>
               <td class="px-4 py-2">{{ reminder.frequency }}</td>
               <td class="px-4 py-2">{{ reminder.notes }}</td>
               <td class="px-4 py-2">{{ reminder.createdBy }}</td>
-              <td class="px-4 py-2 text-center relative">
-                <button @click="toggleMenu(reminder.id)">
-                  <v-icon name="bi-three-dots-vertical" class="w-5 h-5 text-gray-500 hover:text-gray-800 dark:hover:text-white" />
-                </button>
-                <div
-                  v-if="openMenu === reminder.id"
-                  class="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg rounded-md z-10"
-                >
-                  <ul class="text-sm text-gray-700 dark:text-gray-200">
-                    <li class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">Edit</li>
-                    <li class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">Delete</li>
-                  </ul>
+              <td class="px-4 py-2 text-center">
+                <div class="inline-block relative">
+                    <button @click.stop="toggleMenu(reminder.id, $event)">
+                        <v-icon name="bi-three-dots-vertical" class="w-5 h-5 text-gray-500 hover:text-gray-800 dark:hover:text-white" />
+                    </button>
                 </div>
               </td>
             </tr>
@@ -191,5 +242,31 @@ const buttonClass = (active) =>
       </div>
     </div>
   </section>
-</template>
 
+  <Teleport to="body">
+    <div
+      v-if="activeMenuId !== null"
+      class="fixed w-32 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg rounded-md z-[9999] ring-1 ring-black ring-opacity-5"
+      :style="{ top: menuPosition.top, left: menuPosition.left }"
+      v-click-outside="() => (activeMenuId = null)"
+    >
+      <ul class="text-sm text-gray-700 dark:text-gray-200 py-1">
+        <li 
+          v-if="!reminders.find(r => r.id === activeMenuId)?.completed"
+          @click="markAsComplete"
+          class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
+        >
+          Complete
+        </li>
+        <li class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">Edit</li>
+        <li 
+          v-if="!reminders.find(r => r.id === activeMenuId)?.completed"
+          @click="deleteReminder"
+          class="px-4 py-2 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 cursor-pointer"
+        >
+          Delete
+        </li>
+      </ul>
+    </div>
+  </Teleport>
+</template>
