@@ -1,21 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue';
 
+// --- State ---
 const sortColumn = ref('');
 const sortOrder = ref('asc');
 const activeMenuId = ref(null);
-const menuPosition = ref({ top: '0px', left: '0px' });
 const filterStatus = ref('all');
 const searchQuery = ref('');
-
-const columns = [
-  { key: 'name', label: 'Name' },
-  { key: 'priority', label: 'Priority' },
-  { key: 'dueDate', label: 'Due Date' },
-  { key: 'frequency', label: 'Frequency' },
-  { key: 'notes', label: 'Notes' },
-  { key: 'createdBy', label: 'Created By' }
-];
 
 const reminders = ref([
   {
@@ -38,7 +29,7 @@ const reminders = ref([
     createdBy: 'Bob',
     completed: true
   },
-   {
+  {
     id: 3,
     name: 'Review project proposal',
     priority: 'High',
@@ -60,44 +51,53 @@ const reminders = ref([
   }
 ]);
 
+const columns = [
+  { key: 'name', label: 'Name' },
+  { key: 'priority', label: 'Priority' },
+  { key: 'dueDate', label: 'Due Date' },
+  { key: 'frequency', label: 'Frequency' },
+  { key: 'notes', label: 'Notes' },
+  { key: 'createdBy', label: 'Created By' }
+];
+
+// --- Computed Properties ---
 const filteredReminders = computed(() => {
-  let result = [...reminders.value];
-
-  //search logic
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase();
-    result = result.filter(r =>
-      r.name.toLowerCase().includes(query) ||
-      r.priority.toLowerCase().includes(query) ||
-      r.frequency.toLowerCase().includes(query) ||
-      r.notes.toLowerCase().includes(query) ||
-      r.createdBy.toLowerCase().includes(query)
-    );
-  }
-  
-  //filtering logic
   const now = new Date();
-  if (filterStatus.value === 'completed') {
-    result = result.filter(r => r.completed);
-  } else if (filterStatus.value === 'not-completed') {
-    result = result.filter(r => !r.completed && r.dueDate > now);
-  } else if (filterStatus.value === 'failed-to-complete') {
-    result = result.filter(r => !r.completed && r.dueDate <= now);
+  const baseReminders = reminders.value.filter(r => {
+    switch (filterStatus.value) {
+      case 'completed': return r.completed;
+      case 'upcoming-reminders': return !r.completed && r.dueDate > now;
+      case 'passed-due-reminders': return !r.completed && r.dueDate <= now;
+      default: return true;
+    }
+  });
+
+  const searched = searchQuery.value
+    ? baseReminders.filter(r =>
+        Object.values(r).some(val => 
+          String(val).toLowerCase().includes(searchQuery.value.toLowerCase())
+        )
+      )
+    : baseReminders;
+
+  if (!sortColumn.value) {
+    return searched;
   }
 
-  if (sortColumn.value) {
-    result.sort((a, b) => {
-      const valA = a[sortColumn.value];
-      const valB = b[sortColumn.value];
+  return [...searched].sort((a, b) => {
+    const valA = a[sortColumn.value];
+    const valB = b[sortColumn.value];
 
-      if (valA === valB) return 0;
-      return (valA > valB ? 1 : -1) * (sortOrder.value === 'asc' ? 1 : -1);
-    });
-  }
-
-  return result;
+    if (valA === valB) return 0;
+    return (valA > valB ? 1 : -1) * (sortOrder.value === 'asc' ? 1 : -1);
+  });
 });
 
+const activeReminder = computed(() => {
+  return reminders.value.find(r => r.id === activeMenuId.value);
+});
+
+// --- Methods ---
 const toggleSort = (column) => {
   if (sortColumn.value === column) {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
@@ -107,30 +107,20 @@ const toggleSort = (column) => {
   }
 };
 
-const toggleMenu = (id, event) => {
-  if (activeMenuId.value === id) {
-    activeMenuId.value = null;
-  } else {
-    const rect = event.currentTarget.getBoundingClientRect();
-    activeMenuId.value = id;
-    menuPosition.value = {
-        top: `${rect.bottom + window.scrollY}px`,
-        left: `${rect.left + window.scrollX}px`,
-    };
-  }
+const toggleMenu = (id) => {
+  activeMenuId.value = activeMenuId.value === id ? null : id;
 };
 
 const markAsComplete = () => {
-  const reminder = reminders.value.find(r => r.id === activeMenuId.value);
-  if (reminder) {
-    reminder.completed = true;
-    activeMenuId.value = null; // Close the menu
+  if (activeReminder.value) {
+    activeReminder.value.completed = true;
+    activeMenuId.value = null;
   }
 };
 
 const deleteReminder = () => {
   reminders.value = reminders.value.filter(r => r.id !== activeMenuId.value);
-  activeMenuId.value = null; // Close the menu
+  activeMenuId.value = null;
 };
 
 const formatDate = (date) => {
@@ -141,9 +131,7 @@ const formatTime = (date) => {
   return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-const buttonClass = (active) =>
-  `px-3 py-1 text-sm rounded-md ${active ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500'}`;
-
+// --- Custom Directives ---
 const vClickOutside = {
   mounted(el, binding) {
     el.clickOutsideEvent = (event) => {
@@ -167,20 +155,20 @@ const vClickOutside = {
         <div class="space-x-2">
           <button
             @click="filterStatus = 'all'"
-            :class="buttonClass(filterStatus === 'all')"
+            :class="['px-3 py-1 text-sm rounded-md', { 'bg-blue-600 text-white': filterStatus === 'all', 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500': filterStatus !== 'all' }]"
           >All Reminders</button>
           <button
-            @click="filterStatus = 'not-completed'"
-            :class="buttonClass(filterStatus === 'not-completed')"
-          >Not Completed</button>
+            @click="filterStatus = 'upcoming-reminders'"
+            :class="['px-3 py-1 text-sm rounded-md', { 'bg-blue-600 text-white': filterStatus === 'upcoming-reminders', 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500': filterStatus !== 'upcoming-reminders' }]"
+          >Upcoming Reminders</button>
           <button
             @click="filterStatus = 'completed'"
-            :class="buttonClass(filterStatus === 'completed')"
+            :class="['px-3 py-1 text-sm rounded-md', { 'bg-blue-600 text-white': filterStatus === 'completed', 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500': filterStatus !== 'completed' }]"
           >Completed</button>
           <button
-            @click="filterStatus = 'failed-to-complete'"
-            :class="buttonClass(filterStatus === 'failed-to-complete')"
-          >Failed to Complete</button>
+            @click="filterStatus = 'passed-due-reminders'"
+            :class="['px-3 py-1 text-sm rounded-md', { 'bg-blue-600 text-white': filterStatus === 'passed-due-reminders', 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500': filterStatus !== 'passed-due-reminders' }]"
+          >Passed Due Reminders</button>
         </div>
       </div>
 
@@ -197,7 +185,13 @@ const vClickOutside = {
         <table class="w-full text-left border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
           <thead class="bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200">
             <tr>
-              <th v-for="col in columns" :key="col.key" class="px-4 py-2 cursor-pointer" @click="toggleSort(col.key)">
+              <th
+                v-for="col in columns"
+                :key="col.key"
+                class="px-4 py-2 cursor-pointer"
+                @click="toggleSort(col.key)"
+                :aria-sort="sortColumn === col.key ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'"
+              >
                 {{ col.label }}
                 <v-icon
                   name="md-keyboardarrowup"
@@ -223,11 +217,32 @@ const vClickOutside = {
               <td class="px-4 py-2">{{ reminder.frequency }}</td>
               <td class="px-4 py-2">{{ reminder.notes }}</td>
               <td class="px-4 py-2">{{ reminder.createdBy }}</td>
-              <td class="px-4 py-2 text-center">
+              <td class="px-4 py-2 text-center relative" v-click-outside="() => (activeMenuId = null)">
                 <div class="inline-block relative">
-                    <button @click.stop="toggleMenu(reminder.id, $event)">
-                        <v-icon name="bi-three-dots-vertical" class="w-5 h-5 text-gray-500 hover:text-gray-800 dark:hover:text-white" />
-                    </button>
+                  <button @click.stop="toggleMenu(reminder.id)" aria-haspopup="true" :aria-expanded="activeMenuId === reminder.id">
+                    <v-icon name="bi-three-dots-vertical" class="w-5 h-5 text-gray-500 hover:text-gray-800 dark:hover:text-white" />
+                  </button>
+                  <div
+                    v-if="activeMenuId === reminder.id"
+                    class="absolute w-32 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg rounded-md z-10 ring-1 ring-black ring-opacity-5 right-0 mt-2 origin-top-right"
+                  >
+                    <ul class="text-sm text-gray-700 dark:text-gray-200 py-1">
+                      <li
+                        v-if="activeReminder && !activeReminder.completed"
+                        @click="markAsComplete"
+                        class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
+                      >
+                        Complete
+                      </li>
+                      <li class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">Edit</li>
+                      <li
+                        @click="deleteReminder"
+                        class="px-4 py-2 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 cursor-pointer"
+                      >
+                        Delete
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </td>
             </tr>
@@ -242,31 +257,4 @@ const vClickOutside = {
       </div>
     </div>
   </section>
-
-  <Teleport to="body">
-    <div
-      v-if="activeMenuId !== null"
-      class="fixed w-32 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg rounded-md z-[9999] ring-1 ring-black ring-opacity-5"
-      :style="{ top: menuPosition.top, left: menuPosition.left }"
-      v-click-outside="() => (activeMenuId = null)"
-    >
-      <ul class="text-sm text-gray-700 dark:text-gray-200 py-1">
-        <li 
-          v-if="!reminders.find(r => r.id === activeMenuId)?.completed"
-          @click="markAsComplete"
-          class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
-        >
-          Complete
-        </li>
-        <li class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">Edit</li>
-        <li 
-          v-if="!reminders.find(r => r.id === activeMenuId)?.completed"
-          @click="deleteReminder"
-          class="px-4 py-2 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 cursor-pointer"
-        >
-          Delete
-        </li>
-      </ul>
-    </div>
-  </Teleport>
 </template>

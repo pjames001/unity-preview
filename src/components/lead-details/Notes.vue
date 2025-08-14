@@ -1,17 +1,14 @@
 <script setup>
 import { ref, computed } from 'vue';
 
+// --- State ---
 const searchQuery = ref('');
 const showOnlyImportant = ref(false);
 const selectedSource = ref('All Notes');
-
 const sortColumn = ref('');
 const sortOrder = ref('asc');
-
 const newNoteText = ref('');
 const selectedPreset = ref('');
-
-// New reactive properties for preset creation
 const newPresetName = ref('');
 const newPresetMessage = ref('');
 const showPresetCreation = ref(false);
@@ -62,12 +59,29 @@ const sourceOptions = [
   'Bulk Notes'
 ];
 
-// Toggle important star
+// --- Computed Properties ---
+const displayedNotes = computed(() => {
+  const filtered = originalNotes.value.filter(note => {
+    const isMatchingSearch = searchQuery.value
+      ? Object.values(note).some(val => 
+          String(val).toLowerCase().includes(searchQuery.value.toLowerCase())
+        )
+      : true;
+    
+    const isImportant = showOnlyImportant.value ? note.important : true;
+    const isSourceMatch = selectedSource.value === 'All Notes' || note.source === selectedSource.value;
+
+    return isMatchingSearch && isImportant && isSourceMatch;
+  });
+
+  return sortData(filtered);
+});
+
+// --- Methods ---
 const toggleImportant = (note) => {
   note.important = !note.important;
-}
+};
 
-// Sorting logic
 const toggleSort = (col) => {
   if (sortColumn.value === col) {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
@@ -75,7 +89,7 @@ const toggleSort = (col) => {
     sortColumn.value = col;
     sortOrder.value = 'asc';
   }
-}
+};
 
 const sortData = (data) => {
   if (!sortColumn.value) return data;
@@ -84,9 +98,13 @@ const sortData = (data) => {
     let valA = a[sortColumn.value];
     let valB = b[sortColumn.value];
 
+    if (sortColumn.value === 'important') {
+      const order = sortOrder.value === 'asc' ? 1 : -1;
+      return (valA === valB) ? 0 : (valA ? 1 : -1) * order;
+    }
+
     if (valA instanceof Date) valA = valA.getTime();
     if (valB instanceof Date) valB = valB.getTime();
-
     if (typeof valA === 'string') valA = valA.toLowerCase();
     if (typeof valB === 'string') valB = valB.toLowerCase();
 
@@ -94,36 +112,14 @@ const sortData = (data) => {
     if (valA > valB) return sortOrder.value === 'asc' ? 1 : -1;
     return 0;
   });
-}
+};
 
-// Filtered and sorted notes
-const displayedNotes = computed(() => {
-  let filtered = [...originalNotes.value];
-
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase();
-    filtered = filtered.filter(note =>
-      note.text.toLowerCase().includes(query) ||
-      note.by.toLowerCase().includes(query) ||
-      note.source.toLowerCase().includes(query)
-    );
-  }
-
-  if (showOnlyImportant.value) {
-    filtered = filtered.filter(note => note.important);
-  }
-
-  if (selectedSource.value !== 'All Notes') {
-    filtered = filtered.filter(note => note.source === selectedSource.value);
-  }
-
-  return sortData(filtered);
-});
-
-// Method to save the new preset
 const saveNewPreset = () => {
   if (newPresetName.value && newPresetMessage.value) {
-    presetMessages.value.push({ label: newPresetName.value, value: newPresetMessage.value });
+    presetMessages.value.push({ 
+      label: newPresetName.value, 
+      value: newPresetMessage.value 
+    });
     newPresetName.value = '';
     newPresetMessage.value = '';
     showPresetCreation.value = false;
@@ -231,7 +227,11 @@ const saveNewPreset = () => {
                 Note Source
                 <v-icon name="md-keyboardarrowup" :active="sortColumn === 'source'" :order="sortOrder" class="inline-block ml-1" />
               </th>
-              <th class="px-4 py-2 text-center">Important</th>
+              <th class="px-4 py-2 text-center cursor-pointer" @click="toggleSort('important')">
+                Important
+                 <v-icon v-if="sortOrder === 'asc' && sortColumn === 'important'" name="bi-star-fill" class="inline-block ml-1 text-yellow-400" />
+                 <v-icon v-else name="bi-star" class="inline-block ml-1" />
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -264,3 +264,20 @@ const saveNewPreset = () => {
     </div>
   </section>
 </template>
+
+
+
+<style scoped>
+
+.sort-icon {
+  transition: transform 0.2s;
+}
+
+.sort-icon.asc {
+  transform: rotate(0deg);
+}
+
+.sort-icon.desc {
+  transform: rotate(180deg);
+}
+</style>

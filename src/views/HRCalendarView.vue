@@ -1,150 +1,211 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
+import AddWeeklySchedule from '../components/week-schedule/AddWeeklySchedule.vue';
+import EditWeeklySchedule from '../components/week-schedule/EditWeeklySchedule.vue';
 
-// --- Mock Data ---
-// A mock list of departments
+// --- State: Mock Data ---
 const mockDepartments = ref([
   { id: 1, name: 'Engineering' },
   { id: 2, name: 'Marketing' },
   { id: 3, name: 'Sales' },
 ]);
-
-// A mock list of employees assigned to departments
+const mockOfficeLocations = ref([
+  { id: 'HQ', name: 'Headquarters' },
+  { id: 'BR', name: 'Branch Office' },
+  { id: 'RM', name: 'Remote' },
+]);
+const mockPositions = ref([
+  { id: 'Dev', name: 'Software Developer' },
+  { id: 'Eng', name: 'Engineering Manager' },
+  { id: 'Mkt', name: 'Marketing Specialist' },
+  { id: 'Slp', name: 'Salesperson' },
+]);
+const mockScheduleTemplates = ref([
+  {
+    id: 1, name: 'Standard 9-5 Shift', color: '#34d399',
+    weeklySchedule: [
+      { day: 'Monday', scheduleType: 'Default Shift', clockIn: '09:00', clockOut: '17:00',
+        breaks: [
+          { type: 'Short Break', startTime: '10:45', endTime: '11:00' },
+          { type: 'Lunch', startTime: '13:00', endTime: '13:30' },
+          { type: 'Short Break', startTime: '15:15', endTime: '15:30' }
+        ]
+      },
+      { day: 'Tuesday', scheduleType: 'Default Shift', clockIn: '09:00', clockOut: '17:00',
+        breaks: [
+          { type: 'Short Break', startTime: '10:45', endTime: '11:00' },
+          { type: 'Lunch', startTime: '13:00', endTime: '13:30' },
+          { type: 'Short Break', startTime: '15:15', endTime: '15:30' }
+        ]
+      },
+      { day: 'Wednesday', scheduleType: 'Default Shift', clockIn: '09:00', clockOut: '17:00',
+        breaks: [
+          { type: 'Short Break', startTime: '10:45', endTime: '11:00' },
+          { type: 'Lunch', startTime: '13:00', endTime: '13:30' },
+          { type: 'Short Break', startTime: '15:15', endTime: '15:30' }
+        ]
+      },
+      { day: 'Thursday', scheduleType: 'Default Shift', clockIn: '09:00', clockOut: '17:00',
+        breaks: [
+          { type: 'Short Break', startTime: '10:45', endTime: '11:00' },
+          { type: 'Lunch', startTime: '13:00', endTime: '13:30' },
+          { type: 'Short Break', startTime: '15:15', endTime: '15:30' }
+        ]
+      },
+      { day: 'Friday', scheduleType: 'Default Shift', clockIn: '09:00', clockOut: '17:00',
+        breaks: [
+          { type: 'Short Break', startTime: '10:45', endTime: '11:00' },
+          { type: 'Lunch', startTime: '13:00', endTime: '13:30' },
+          { type: 'Short Break', startTime: '15:15', endTime: '15:30' }
+        ]
+      },
+      { day: 'Saturday', scheduleType: 'Day Off', clockIn: '', clockOut: '', breaks: [] },
+      { day: 'Sunday', scheduleType: 'Day Off', clockIn: '', clockOut: '', breaks: [] },
+    ]
+  },
+  {
+    id: 2, name: 'Night Shift', color: '#8b5cf6',
+    weeklySchedule: [
+      { day: 'Monday', scheduleType: 'Default Shift', clockIn: '21:00', clockOut: '05:00',
+        breaks: [
+          { type: 'Short Break', startTime: '23:00', endTime: '23:15' },
+          { type: 'Dinner', startTime: '01:00', endTime: '01:30' },
+          { type: 'Short Break', startTime: '03:30', endTime: '03:45' }
+        ]
+      },
+      { day: 'Tuesday', scheduleType: 'Default Shift', clockIn: '21:00', clockOut: '05:00',
+        breaks: [
+          { type: 'Short Break', startTime: '23:00', endTime: '23:15' },
+          { type: 'Dinner', startTime: '01:00', endTime: '01:30' },
+          { type: 'Short Break', startTime: '03:30', endTime: '03:45' }
+        ]
+      },
+      { day: 'Wednesday', scheduleType: 'Default Shift', clockIn: '21:00', clockOut: '05:00',
+        breaks: [
+          { type: 'Short Break', startTime: '23:00', endTime: '23:15' },
+          { type: 'Dinner', startTime: '01:00', endTime: '01:30' },
+          { type: 'Short Break', startTime: '03:30', endTime: '03:45' }
+        ]
+      },
+      { day: 'Thursday', scheduleType: 'Default Shift', clockIn: '21:00', clockOut: '05:00',
+        breaks: [
+          { type: 'Short Break', startTime: '23:00', endTime: '23:15' },
+          { type: 'Dinner', startTime: '01:00', endTime: '01:30' },
+          { type: 'Short Break', startTime: '03:30', endTime: '03:45' }
+        ]
+      },
+      { day: 'Friday', scheduleType: 'Default Shift', clockIn: '21:00', clockOut: '05:00',
+        breaks: [
+          { type: 'Short Break', startTime: '23:00', endTime: '23:15' },
+          { type: 'Dinner', startTime: '01:00', endTime: '01:30' },
+          { type: 'Short Break', startTime: '03:30', endTime: '03:45' }
+        ]
+      },
+      { day: 'Saturday', scheduleType: 'Day Off', clockIn: '', clockOut: '', breaks: [] },
+      { day: 'Sunday', scheduleType: 'Day Off', clockIn: '', clockOut: '', breaks: [] },
+    ]
+  },
+]);
 const mockEmployees = ref([
-  { id: 101, name: 'Alice Johnson', departmentId: 1 },
-  { id: 102, name: 'Bob Smith', departmentId: 1 },
-  { id: 103, name: 'Charlie Brown', departmentId: 2 },
-  { id: 104, name: 'Diana Prince', departmentId: 2 },
-  { id: 105, name: 'Eve Adams', departmentId: 3 },
-  { id: 106, name: 'Frank Lee', departmentId: 3 },
+  { id: 101, name: 'Alice Johnson', departmentId: 1, officeLocationId: 'HQ', positionId: 'Eng', scheduleId: 2 },
+  { id: 102, name: 'Bob Smith', departmentId: 1, officeLocationId: 'BR', positionId: 'Dev', scheduleId: 1 },
+  { id: 103, name: 'Charlie Brown', departmentId: 2, officeLocationId: 'HQ', positionId: 'Mkt', scheduleId: 1 },
+  { id: 104, name: 'Diana Prince', departmentId: 2, officeLocationId: 'RM', positionId: 'Mkt', scheduleId: 1 },
+  { id: 105, name: 'Eve Adams', departmentId: 3, officeLocationId: 'BR', positionId: 'Slp', scheduleId: 2 },
+  { id: 106, name: 'Frank Lee', departmentId: 3, officeLocationId: 'HQ', positionId: 'Slp', scheduleId: 1 },
 ]);
 
-// A mock database of employee shifts with a unified structure.
-// All shifts now include a 'breaks' array, which can be empty.
-const mockShifts = ref([
-  // Alice's weekly shifts are now adjusted for the night view
-  { employeeId: 101, date: '2025-08-11', shiftType: 'Default', startTime: '21:00', endTime: '05:00', breaks: [
-    { type: 'Break', startTime: '23:00', endTime: '23:15' },
-    { type: 'Lunch', startTime: '01:00', endTime: '01:30' },
-    { type: 'Break', startTime: '03:00', endTime: '03:15' },
-  ] },
-  { employeeId: 101, date: '2025-08-12', shiftType: 'Default', startTime: '21:00', endTime: '05:00', breaks: [
-    { type: 'Break', startTime: '23:00', endTime: '23:15' },
-    { type: 'Lunch', startTime: '01:00', endTime: '01:30' },
-    { type: 'Break', startTime: '03:00', endTime: '03:15' },
-  ] },
-  { employeeId: 101, date: '2025-08-13', shiftType: 'Default', startTime: '21:00', endTime: '05:00', breaks: [
-    { type: 'Break', startTime: '23:00', endTime: '23:15' },
-    { type: 'Lunch', startTime: '01:00', endTime: '01:30' },
-    { type: 'Break', startTime: '03:00', endTime: '03:15' },
-  ] },
-  { employeeId: 101, date: '2025-08-14', shiftType: 'Default', startTime: '21:00', endTime: '05:00', breaks: [
-    { type: 'Break', startTime: '23:00', endTime: '23:15' },
-    { type: 'Lunch', startTime: '01:00', endTime: '01:30' },
-    { type: 'Break', startTime: '03:00', endTime: '03:15' },
-  ] },
-  { employeeId: 101, date: '2025-08-15', shiftType: 'Default', startTime: '21:00', endTime: '05:00', breaks: [
-    { type: 'Break', startTime: '23:00', endTime: '23:15' },
-    { type: 'Lunch', startTime: '01:00', endTime: '01:30' },
-    { type: 'Break', startTime: '03:00', endTime: '03:15' },
-  ] },
-  { employeeId: 101, date: '2025-08-16', shiftType: 'Default', startTime: '21:00', endTime: '05:00', breaks: [
-    { type: 'Break', startTime: '23:00', endTime: '23:15' },
-    { type: 'Lunch', startTime: '01:00', endTime: '01:30' },
-    { type: 'Break', startTime: '03:00', endTime: '03:15' },
-  ] },
-  { employeeId: 101, date: '2025-08-17', shiftType: 'Default', startTime: '21:00', endTime: '05:00', breaks: [
-    { type: 'Break', startTime: '23:00', endTime: '23:15' },
-    { type: 'Lunch', startTime: '01:00', endTime: '01:30' },
-    { type: 'Break', startTime: '03:00', endTime: '03:15' },
-  ] },
-  
-  // Bob's weekly shifts are also adjusted for the night view
-  { employeeId: 102, date: '2025-08-11', shiftType: 'Late', startTime: '20:00', endTime: '04:00', breaks: [
-    { type: 'Break', startTime: '22:00', endTime: '22:15' },
-    { type: 'Lunch', startTime: '00:00', endTime: '00:30' },
-    { type: 'Break', startTime: '02:00', endTime: '02:15' },
-  ] },
-  { employeeId: 102, date: '2025-08-12', shiftType: 'Late', startTime: '20:00', endTime: '04:00', breaks: [
-    { type: 'Break', startTime: '22:00', endTime: '22:15' },
-    { type: 'Lunch', startTime: '00:00', endTime: '00:30' },
-    { type: 'Break', startTime: '02:00', endTime: '02:15' },
-  ] },
-  { employeeId: 102, date: '2025-08-13', shiftType: 'Late', startTime: '20:00', endTime: '04:00', breaks: [
-    { type: 'Break', startTime: '22:00', endTime: '22:15' },
-    { type: 'Lunch', startTime: '00:00', endTime: '00:30' },
-    { type: 'Break', startTime: '02:00', endTime: '02:15' },
-  ] },
-  { employeeId: 102, date: '2025-08-14', shiftType: 'Late', startTime: '20:00', endTime: '04:00', breaks: [
-    { type: 'Break', startTime: '22:00', endTime: '22:15' },
-    { type: 'Lunch', startTime: '00:00', endTime: '00:30' },
-    { type: 'Break', startTime: '02:00', endTime: '02:15' },
-  ] },
-  { employeeId: 102, date: '2025-08-15', shiftType: 'Late', startTime: '20:00', endTime: '04:00', breaks: [
-    { type: 'Break', startTime: '22:00', endTime: '22:15' },
-    { type: 'Lunch', startTime: '00:00', endTime: '00:30' },
-    { type: 'Break', startTime: '02:00', endTime: '02:15' },
-  ] },
-
-  // Daily shifts with breaks for various employees and dates (unchanged)
-  { employeeId: 103, date: '2025-08-11', shiftType: 'Night', startTime: '20:00', endTime: '04:00', breaks: [
-    { type: 'Break', startTime: '22:00', endTime: '22:15' },
-    { type: 'Lunch', startTime: '00:00', endTime: '00:30' },
-    { type: 'Break', startTime: '02:00', endTime: '02:15' },
-  ]},
-  { employeeId: 104, date: '2025-08-11', shiftType: 'Overnight', startTime: '22:00', endTime: '05:00', breaks: [
-    { type: 'Break', startTime: '00:00', endTime: '00:15' },
-    { type: 'Lunch', startTime: '02:00', endTime: '02:30' },
-    { type: 'Break', startTime: '04:00', endTime: '04:15' },
-  ]},
-  { employeeId: 105, date: '2025-08-11', shiftType: 'Evening', startTime: '18:00', endTime: '22:00', breaks: [
-    { type: 'Break', startTime: '20:00', endTime: '20:15' },
-  ]},
-  { employeeId: 106, date: '2025-08-11', shiftType: 'Default', startTime: '08:00', endTime: '16:00', breaks: [
-    { type: 'Break', startTime: '10:00', endTime: '10:15' },
-    { type: 'Lunch', startTime: '12:00', endTime: '12:30' },
-  ]},
-]);
-
-
-// --- Component State ---
-const currentView = ref('weekly'); // 'weekly' or 'daily'
-
-// Multi-select dropdown state
-const selectedDepartments = ref([1, 2, 3]); // Default to ALL departments
-const selectedEmployees = ref([]);
-const showDepartmentsDropdown = ref(false);
-const showEmployeesDropdown = ref(false);
-
-// Date picker state
+// --- State: Component & Filter Management ---
+const currentView = ref('weekly');
+const selectedFilters = ref({
+  departments: mockDepartments.value.map(d => d.id),
+  officeLocations: mockOfficeLocations.value.map(l => l.id),
+  positions: mockPositions.value.map(p => p.id),
+  scheduleTemplates: mockScheduleTemplates.value.map(s => s.id),
+  employees: [],
+});
+const showDropdowns = ref({
+  departments: false,
+  officeLocations: false,
+  positions: false,
+  scheduleTemplates: false,
+  employees: false,
+});
 const weeklyStartDate = ref('2025-08-11');
 const weeklyEndDate = ref('2025-08-17');
 const dailyDate = ref('2025-08-11');
+const showAddScheduleModal = ref(false);
+const showEditScheduleModal = ref(false);
+const scheduleToEdit = ref(null);
 
-// --- Helper Functions ---
-/**
- * Generates an array of Date objects for a given date range.
- * @param {string} startDateString - The start date in 'YYYY-MM-DD' format.
- * @param {string} endDateString - The end date in 'YYYY-MM-DD' format.
- * @returns {Date[]} An array of Date objects for the days in the range.
- */
-const getDateRange = (startDateString, endDateString) => {
+const filterOptions = computed(() => [
+  { label: 'Departments', key: 'departments', options: mockDepartments.value },
+  { label: 'Office Locations', key: 'officeLocations', options: mockOfficeLocations.value },
+  { label: 'Positions', key: 'positions', options: mockPositions.value },
+  { label: 'Schedule Templates', key: 'scheduleTemplates', options: mockScheduleTemplates.value },
+  { label: 'Employees', key: 'employees', options: filteredEmployees.value },
+]);
+
+// --- Computed Properties ---
+const dateRange = computed(() => {
   const dates = [];
-  let currentDate = new Date(startDateString + 'T00:00:00Z');
-  const endDate = new Date(endDateString + 'T00:00:00Z');
-
+  let currentDate = new Date(weeklyStartDate.value + 'T00:00:00Z');
+  const endDate = new Date(weeklyEndDate.value + 'T00:00:00Z');
   while (currentDate <= endDate) {
     dates.push(new Date(currentDate));
     currentDate.setUTCDate(currentDate.getUTCDate() + 1);
   }
   return dates;
-};
+});
 
-/**
- * Formats a Date object to a 'YYYY-MM-DD' string.
- * @param {Date} date - The Date object.
- * @returns {string} The formatted date string.
- */
+const timelineStartHour = 18;
+const timelineEndHour = 30;
+const totalTimelineHours = timelineEndHour - timelineStartHour;
+
+const filteredEmployees = computed(() => {
+  return mockEmployees.value.filter(employee =>
+    selectedFilters.value.departments.includes(employee.departmentId) &&
+    selectedFilters.value.officeLocations.includes(employee.officeLocationId) &&
+    selectedFilters.value.positions.includes(employee.positionId) &&
+    selectedFilters.value.scheduleTemplates.includes(employee.scheduleId)
+  );
+});
+
+const displayedEmployees = computed(() => {
+  if (selectedFilters.value.employees.length === 0) {
+    return filteredEmployees.value;
+  }
+  return filteredEmployees.value.filter(employee =>
+    selectedFilters.value.employees.includes(employee.id)
+  );
+});
+
+const shifts = computed(() => {
+  const allShifts = [];
+  mockEmployees.value.forEach(employee => {
+    const scheduleTemplate = mockScheduleTemplates.value.find(s => s.id === employee.scheduleId);
+    if (!scheduleTemplate) return;
+
+    dateRange.value.forEach(day => {
+      const dayOfWeek = day.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' });
+      const daySchedule = scheduleTemplate.weeklySchedule.find(d => d.day === dayOfWeek);
+
+      if (daySchedule?.scheduleType !== 'Day Off') {
+        allShifts.push({
+          employeeId: employee.id,
+          date: formatDate(day),
+          shiftType: daySchedule.scheduleType,
+          startTime: daySchedule.clockIn,
+          endTime: daySchedule.clockOut,
+          breaks: daySchedule.breaks || [],
+        });
+      }
+    });
+  });
+  return allShifts;
+});
+
+// --- Methods ---
 const formatDate = (date) => {
   const y = date.getUTCFullYear();
   const m = String(date.getUTCMonth() + 1).padStart(2, '0');
@@ -152,131 +213,90 @@ const formatDate = (date) => {
   return `${y}-${m}-${d}`;
 };
 
-/**
- * Checks if a given date is a weekend (Saturday or Sunday).
- * @param {Date} date - The Date object.
- * @returns {boolean} True if the date is a weekend, false otherwise.
- */
 const isWeekend = (date) => {
   const day = new Date(date).getUTCDay();
   return day === 0 || day === 6;
 };
 
-// Get the date range for the weekly view
-const dateRange = computed(() => getDateRange(weeklyStartDate.value, weeklyEndDate.value));
-
-// Define the start and end of the daily timeline in military time (e.g., 18 for 6 PM, 30 for 6 AM the next day)
-const timelineStartHour = 18;
-const timelineEndHour = 30; // 6 AM of the next day (24 + 6)
-const totalTimelineHours = timelineEndHour - timelineStartHour;
-
-/**
- * Converts a time string (HH:MM) to a minute value relative to a reference hour.
- * Accounts for times crossing midnight.
- * @param {string} timeString - The time string (e.g., '20:30').
- * @param {number} referenceHour - The reference hour (e.g., 18 for 6 PM).
- * @returns {number} The total minutes from the reference hour.
- */
 const convertToTimelineMinutes = (timeString, referenceHour) => {
+  if (!timeString) return 0;
   const [hour, minute] = timeString.split(':').map(Number);
   let totalHours = hour;
-  if (hour < referenceHour) {
-    totalHours += 24; // Handle times that cross midnight
-  }
+  if (hour < referenceHour && hour < 12) totalHours += 24;
   return (totalHours - referenceHour) * 60 + minute;
 };
 
-// --- Computed Properties for filtering and display ---
-// Filtered employees based on department selection
-const filteredEmployees = computed(() => {
-  if (selectedDepartments.value.length === 0) {
-    return mockEmployees.value;
-  }
-  return mockEmployees.value.filter(employee =>
-    selectedDepartments.value.includes(employee.departmentId)
-  );
-});
-
-// Final list of employees to display based on department and employee filters
-const displayedEmployees = computed(() => {
-  // If no employees are explicitly selected, show all filtered employees
-  if (selectedEmployees.value.length === 0) {
-    return filteredEmployees.value;
-  }
-  return filteredEmployees.value.filter(employee =>
-    selectedEmployees.value.includes(employee.id)
-  );
-});
-
-// A function to find a shift for a given employee and date
 const findShift = (employeeId, date) => {
   const dateString = formatDate(date);
-  return mockShifts.value.find(shift =>
+  return shifts.value.find(shift =>
     shift.employeeId === employeeId && shift.date === dateString
   );
 };
 
-// A function to calculate the position and width of a shift bar
 const getShiftBarStyles = (shift) => {
   if (!shift) return {};
-
   const shiftStartMinutes = convertToTimelineMinutes(shift.startTime, timelineStartHour);
   const shiftEndMinutes = convertToTimelineMinutes(shift.endTime, timelineStartHour);
   const totalTimelineMinutes = totalTimelineHours * 60;
-
   const left = (shiftStartMinutes / totalTimelineMinutes) * 100;
   const width = ((shiftEndMinutes - shiftStartMinutes) / totalTimelineMinutes) * 100;
-
-  return {
-    left: `${left}%`,
-    width: `${width}%`,
-  };
+  return { left: `${left}%`, width: `${width}%` };
 };
 
-// A function to calculate the position and width of a break bar
-const getBreakBarStyles = (shift, breakItem) => {
-  const shiftStartMinutes = convertToTimelineMinutes(shift.startTime, timelineStartHour);
-  const breakStartMinutes = convertToTimelineMinutes(breakItem.startTime, timelineStartHour);
-  const breakEndMinutes = convertToTimelineMinutes(breakItem.endTime, timelineStartHour);
-  
-  const totalShiftMinutes = convertToTimelineMinutes(shift.endTime, timelineStartHour) - shiftStartMinutes;
-
-  if (totalShiftMinutes <= 0) { // Avoid division by zero for zero-length shifts
-    return {};
-  }
-
-  const left = ((breakStartMinutes - shiftStartMinutes) / totalShiftMinutes) * 100;
-  const width = ((breakEndMinutes - breakStartMinutes) / totalShiftMinutes) * 100;
-
-  return {
-    left: `${left}%`,
-    width: `${width}%`,
-  };
+const getBreakBarStyles = (breakTime, shiftStartTime, shiftEndTime) => {
+  const shiftStartMinutes = convertToTimelineMinutes(shiftStartTime, timelineStartHour);
+  const shiftEndMinutes = convertToTimelineMinutes(shiftEndTime, timelineStartHour);
+  const shiftDurationMinutes = shiftEndMinutes - shiftStartMinutes;
+  const breakStartMinutes = convertToTimelineMinutes(breakTime.startTime, timelineStartHour);
+  const breakEndMinutes = convertToTimelineMinutes(breakTime.endTime, timelineStartHour);
+  const breakDurationMinutes = breakEndMinutes - breakStartMinutes;
+  const left = ((breakStartMinutes - shiftStartMinutes) / shiftDurationMinutes) * 100;
+  const width = (breakDurationMinutes / shiftDurationMinutes) * 100;
+  return { left: `${left}%`, width: `${width}%` };
 };
 
-// Watch for changes in selected departments and automatically select employees
-// that are now available
-watch(selectedDepartments, (newDepartments) => {
-  if (newDepartments.length > 0) {
-    // Filter employees to only those in the newly selected departments
-    const employeesInSelectedDepartments = mockEmployees.value
-      .filter(employee => newDepartments.includes(employee.departmentId))
-      .map(employee => employee.id);
-    
-    // Update selectedEmployees to include these, but don't clear existing selections
-    const newSelectedEmployees = [...new Set([...selectedEmployees.value, ...employeesInSelectedDepartments])];
-    selectedEmployees.value = newSelectedEmployees;
-  } else {
-    // If no departments are selected, clear employee selection as well
-    selectedEmployees.value = [];
+const toggleDropdown = (key) => {
+  showDropdowns.value[key] = !showDropdowns.value[key];
+};
+
+const openAddSchedule = () => showAddScheduleModal.value = true;
+const closeAddSchedule = () => showAddScheduleModal.value = false;
+
+const saveNewSchedule = (newSchedule) => {
+  newSchedule.id = Math.max(...mockScheduleTemplates.value.map(s => s.id)) + 1;
+  mockScheduleTemplates.value.push(newSchedule);
+  closeAddSchedule();
+};
+
+const openEditShiftModal = (employeeId, date) => {
+  const employee = mockEmployees.value.find(e => e.id === employeeId);
+  const schedule = mockScheduleTemplates.value.find(s => s.id === employee?.scheduleId);
+  if (schedule) {
+    scheduleToEdit.value = JSON.parse(JSON.stringify(schedule));
+    showEditScheduleModal.value = true;
   }
+};
+
+const closeEditSchedule = () => {
+  showEditScheduleModal.value = false;
+  scheduleToEdit.value = null;
+};
+
+const saveEditedSchedule = (updatedSchedule) => {
+  const index = mockScheduleTemplates.value.findIndex(s => s.id === updatedSchedule.id);
+  if (index !== -1) mockScheduleTemplates.value[index] = updatedSchedule;
+  closeEditSchedule();
+};
+
+// --- Watchers ---
+watch([filteredEmployees], () => {
+  selectedFilters.value.employees = [];
 });
 </script>
 
 <template>
   <main class="view min-h-screen p-4 md:p-8 dark:bg-gray-900 bg-gray-100 text-gray-800 dark:text-gray-200 transition-colors duration-300">
     <div class="max-w-[1700px] mx-auto">
-      <!-- Header: View Switcher Buttons -->
       <div class="flex justify-center mb-6">
         <button
           @click="currentView = 'weekly'"
@@ -300,73 +320,58 @@ watch(selectedDepartments, (newDepartments) => {
         </button>
       </div>
 
-      <!-- Filters & Date Pickers Section -->
       <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md transition-colors duration-300 mb-6">
-        <h2 class="text-xl font-bold mb-4">Filters</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Departments Custom Dropdown -->
-          <div class="relative">
-            <label class="block text-sm font-medium mb-1">Departments</label>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold">Filters</h2>
+          <button @click="openAddSchedule" class="px-4 py-2 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 transition-colors">
+            Add Weekly Schedule
+          </button>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div
+            v-for="filter in filterOptions"
+            :key="filter.key"
+            class="relative"
+          >
+            <label class="block text-sm font-medium mb-1">{{ filter.label }}</label>
             <div
-              @click="showDepartmentsDropdown = !showDepartmentsDropdown"
+              @click="toggleDropdown(filter.key)"
               class="relative w-full cursor-pointer rounded-md shadow-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 flex justify-between items-center"
             >
               <span>
-                {{ selectedDepartments.length === 0 ? 'Select departments' : `${selectedDepartments.length} selected` }}
+                {{ selectedFilters[filter.key].length === 0 ? `Select ${filter.label.toLowerCase()}` : `${selectedFilters[filter.key].length} selected` }}
               </span>
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
               </svg>
             </div>
-            <ul v-if="showDepartmentsDropdown" class="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border border-gray-300 dark:border-gray-600 max-h-40 overflow-y-auto">
+            <ul v-if="showDropdowns[filter.key]" class="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border border-gray-300 dark:border-gray-600 max-h-40 overflow-y-auto">
               <li
-                v-for="dept in mockDepartments"
-                :key="dept.id"
+                v-for="item in filter.options"
+                :key="item.id"
+                @click.stop="() => {
+                  const index = selectedFilters[filter.key].indexOf(item.id);
+                  if (index > -1) {
+                    selectedFilters[filter.key].splice(index, 1);
+                  } else {
+                    selectedFilters[filter.key].push(item.id);
+                  }
+                }"
                 class="px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer flex items-center"
               >
                 <input
                   type="checkbox"
-                  :value="dept.id"
-                  v-model="selectedDepartments"
+                  :value="item.id"
+                  v-model="selectedFilters[filter.key]"
                   class="mr-2 rounded text-blue-500"
                 >
-                <label>{{ dept.name }}</label>
+                <label>{{ item.name }}</label>
+                <div v-if="filter.key === 'scheduleTemplates'" class="w-4 h-4 ml-2 rounded-full" :style="{ backgroundColor: item.color }"></div>
               </li>
             </ul>
           </div>
-          
-          <!-- Employees Custom Dropdown -->
-          <div class="relative">
-            <label class="block text-sm font-medium mb-1">Employees</label>
-            <div
-              @click="showEmployeesDropdown = !showEmployeesDropdown"
-              class="relative w-full cursor-pointer rounded-md shadow-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 flex justify-between items-center"
-            >
-              <span>
-                {{ selectedEmployees.length === 0 ? 'Select employees' : `${selectedEmployees.length} selected` }}
-              </span>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <ul v-if="showEmployeesDropdown" class="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 rounded-md shadow-lg border border-gray-300 dark:border-gray-600 max-h-40 overflow-y-auto">
-              <li
-                v-for="emp in filteredEmployees"
-                :key="emp.id"
-                class="px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer flex items-center"
-              >
-                <input
-                  type="checkbox"
-                  :value="emp.id"
-                  v-model="selectedEmployees"
-                  class="mr-2 rounded text-blue-500"
-                >
-                <label>{{ emp.name }}</label>
-              </li>
-            </ul>
-          </div>
-          
-          <!-- Weekly Date Pickers -->
+        
           <Transition name="fade-slide">
             <template v-if="currentView === 'weekly'">
               <div class="contents">
@@ -382,13 +387,12 @@ watch(selectedDepartments, (newDepartments) => {
             </template>
           </Transition>
 
-          <!-- Daily Date Picker -->
           <Transition name="fade-slide">
             <template v-if="currentView === 'daily'">
               <div class="contents">
                 <div>
                   <label for="daily-date" class="block text-sm font-medium mb-1">Date</label>
-                  <input type="date" id="daily-date" v-model="dailyDate" class="[&::-webkit-calendar-picker-indicator]:bg-white w-full rounded-md shadow-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-3 py-2 text-sm">
+                  <input type="date" id="daily-date" v-model="dailyDate" class="w-full rounded-md shadow-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-3 py-2 text-sm">
                 </div>
               </div>
             </template>
@@ -396,9 +400,7 @@ watch(selectedDepartments, (newDepartments) => {
         </div>
       </div>
 
-      <!-- Calendar Content -->
       <Transition name="slide-fade" mode="out-in">
-        <!-- Weekly View -->
         <div v-if="currentView === 'weekly'" key="weekly" class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 overflow-x-auto transition-colors duration-300">
           <table class="w-full border-collapse">
             <thead>
@@ -407,7 +409,6 @@ watch(selectedDepartments, (newDepartments) => {
                 <th v-for="day in dateRange" :key="day.toDateString()" 
                     :class="{'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300': isWeekend(day)}"
                     class="p-3 text-center border-b border-r last:border-r-0 border-gray-200 dark:border-gray-600">
-                  <!-- The 'timeZone' option ensures the displayed date matches the selected UTC date -->
                   {{ day.toLocaleString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric', timeZone: 'UTC' }) }}
                 </th>
               </tr>
@@ -420,29 +421,29 @@ watch(selectedDepartments, (newDepartments) => {
                 </td>
                 <td v-for="day in dateRange" :key="day.toDateString()" 
                     class="p-3 text-center text-xs border-r last:border-r-0 border-gray-200 dark:border-gray-600">
-                  <div class="flex flex-col items-center justify-center">
-                    <template v-if="findShift(employee.id, day)">
-                      <span class="font-semibold text-green-600 dark:text-green-400">
-                        {{ findShift(employee.id, day).shiftType }}
-                      </span>
-                      <span class="text-gray-500 dark:text-gray-400">
-                        {{ findShift(employee.id, day).startTime }} - {{ findShift(employee.id, day).endTime }}
-                      </span>
-                    </template>
-                    <span v-else class="text-gray-400 dark:text-gray-600">-</span>
+                  <div
+                    v-if="findShift(employee.id, day)"
+                    @click="openEditShiftModal(employee.id, day)"
+                    class="flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md p-1 transition-colors"
+                  >
+                    <span class="font-semibold text-green-600 dark:text-green-400">
+                      {{ findShift(employee.id, day).shiftType }}
+                    </span>
+                    <span class="text-gray-500 dark:text-gray-400">
+                      {{ findShift(employee.id, day).startTime }} - {{ findShift(employee.id, day).endTime }}
+                    </span>
                   </div>
+                  <span v-else class="text-gray-400 dark:text-gray-600">-</span>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Daily View -->
         <div v-else-if="currentView === 'daily'" key="daily" class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 overflow-x-auto transition-colors duration-300">
           <h3 class="text-lg font-semibold mb-4 text-center">
             Shifts for {{ new Date(dailyDate + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }) }}
           </h3>
-          <!-- Timeline Header -->
           <div class="flex items-center text-gray-500 dark:text-gray-400 text-xs mb-2 pl-40 border-b border-gray-200 dark:border-gray-600">
             <div class="relative w-full flex-grow h-6">
               <div class="absolute inset-0 flex">
@@ -456,10 +457,8 @@ watch(selectedDepartments, (newDepartments) => {
               </div>
             </div>
           </div>
-          <!-- Employee Shift Rows -->
           <div class="space-y-4">
             <div v-for="employee in displayedEmployees" :key="employee.id" class="flex items-center">
-              <!-- Combined employee name and shift type section -->
               <div class="w-40 text-sm text-left pr-4 flex-shrink-0">
                 <span class="font-medium block">{{ employee.name }}</span>
                 <span v-if="findShift(employee.id, new Date(dailyDate + 'T00:00:00Z'))" 
@@ -468,8 +467,7 @@ watch(selectedDepartments, (newDepartments) => {
                 </span>
               </div>
               <div class="relative flex-1 bg-gray-200 dark:bg-gray-700 rounded-md h-8 overflow-hidden">
-                <!-- Half-hour separators -->
-                <div class="absolute inset-0 grid-cols-[repeat(24,minmax(0,1fr))] grid-rows-1 grid z-0">
+                <div class="absolute inset-0 grid grid-cols-[repeat(24,minmax(0,1fr))] grid-rows-1 z-0">
                   <div v-for="i in totalTimelineHours * 2" :key="i"
                        :class="{
                          'border-r': (i-1) % 2 === 0,
@@ -480,21 +478,18 @@ watch(selectedDepartments, (newDepartments) => {
                 </div>
                 
                 <template v-if="findShift(employee.id, new Date(dailyDate + 'T00:00:00Z'))">
-                  <!-- Shift Bar -->
                   <div
+                    @click="openEditShiftModal(employee.id, new Date(dailyDate + 'T00:00:00Z'))"
                     :style="getShiftBarStyles(findShift(employee.id, new Date(dailyDate + 'T00:00:00Z')))"
-                    class="absolute h-full rounded-md shadow-sm flex items-center justify-center p-1 text-xs text-white z-10 bg-green-500"
+                    class="absolute h-full rounded-md shadow-sm flex items-center justify-center p-1 text-xs text-white z-10 bg-green-500 cursor-pointer"
                   >
-                    <!-- Breaks within the shift bar -->
-                    <div v-if="findShift(employee.id, new Date(dailyDate + 'T00:00:00Z')).breaks.length > 0" class="absolute inset-0 flex items-center">
-                      <div
-                        v-for="(breakItem, index) in findShift(employee.id, new Date(dailyDate + 'T00:00:00Z')).breaks"
-                        :key="index"
-                        :style="getBreakBarStyles(findShift(employee.id, new Date(dailyDate + 'T00:00:00Z')), breakItem)"
-                        class="absolute h-4/5 rounded-sm bg-gray-600 dark:bg-gray-300 flex items-center justify-center text-[10px] dark:text-black text-white"
-                      >
-                        {{ breakItem.type }}
-                      </div>
+                    <div
+                      v-for="(breakTime, index) in findShift(employee.id, new Date(dailyDate + 'T00:00:00Z')).breaks"
+                      :key="index"
+                      :style="getBreakBarStyles(breakTime, findShift(employee.id, new Date(dailyDate + 'T00:00:00Z')).startTime, findShift(employee.id, new Date(dailyDate + 'T00:00:00Z')).endTime)"
+                      class="absolute h-full rounded-sm bg-gray-600 dark:bg-gray-300 flex items-center justify-center text-[10px] dark:text-black text-white"
+                    >
+                      <span class="p-1">{{ breakTime.type }}</span>
                     </div>
                   </div>
                 </template>
@@ -505,11 +500,40 @@ watch(selectedDepartments, (newDepartments) => {
         </div>
       </Transition>
     </div>
+
+    <Transition name="modal-fade">
+      <AddWeeklySchedule v-if="showAddScheduleModal" @close="closeAddSchedule" @save="saveNewSchedule" />
+    </Transition>
+
+    <Transition name="modal-fade">
+      <EditWeeklySchedule v-if="showEditScheduleModal" :schedule-data="scheduleToEdit" @close="closeEditSchedule" @save="saveEditedSchedule" />
+    </Transition>
+
   </main>
 </template>
 
 <style scoped>
-/* Scoped styles for the component */
+/* Modal transition styles */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-fade-enter-active .rounded-xl,
+.modal-fade-leave-active .rounded-xl {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.modal-fade-enter-from .rounded-xl,
+.modal-fade-leave-to .rounded-xl {
+  transform: translateY(-20px);
+  opacity: 0;
+}
 .slide-fade-enter-active,
 .slide-fade-leave-active {
   transition: all 0.3s ease-out;
@@ -531,8 +555,4 @@ watch(selectedDepartments, (newDepartments) => {
   transform: translateY(-10px);
   opacity: 0;
 }
-
-/* ::-webkit-calendar-picker-indicator {
-  background-color: white;
-} */
 </style>

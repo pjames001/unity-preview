@@ -1,17 +1,33 @@
 <script setup>
 import { ref, computed } from 'vue';
 
+// --- Props & Emits ---
 const props = defineProps({
   selectedDate: String,
   getWeekDays: Function
 });
 
-// const hoveredDayIndex = ref(null);
-// const hoveredTitle = ref(null);
+// --- State Management ---
 const activeDayIndex = ref(null);
 const activeTitle = ref(null);
 
-// Format time from ISO date string to e.g. "2:30 PM"
+// --- Computed Properties ---
+const weekDaysWithSummary = computed(() => {
+  const weekDays = props.getWeekDays?.(props.selectedDate) || [];
+  return weekDays.map(day => ({
+    ...day,
+    eventSummary: day.events?.length > 0 ? getEventSummary(day.events) : []
+  }));
+});
+
+const activeEvents = computed(() => {
+  if (activeDayIndex.value === null || !activeTitle.value) return [];
+  const day = weekDaysWithSummary.value[activeDayIndex.value];
+  if (!day || !Array.isArray(day.events)) return [];
+  return day.events.filter(event => event.title === activeTitle.value);
+});
+
+// --- Event Handlers & Methods ---
 const formatTime = (isoDateString) => {
   if (!isoDateString) return 'No time set';
   const date = new Date(isoDateString);
@@ -35,17 +51,12 @@ const getColorStyle = (color) => {
   return { bgColor, textColor };
 };
 
-
 const getEventSummary = (events) => {
   const summaryMap = {};
   events.forEach(event => {
     if (!summaryMap[event.title]) {
       const { bgColor, textColor } = getColorStyle(event.color);
-      summaryMap[event.title] = {
-        count: 1,
-        bgColor,
-        textColor
-      };
+      summaryMap[event.title] = { count: 1, bgColor, textColor };
     } else {
       summaryMap[event.title].count++;
     }
@@ -59,26 +70,15 @@ const getEventSummary = (events) => {
   }));
 };
 
-//to handle the click event
 const toggleActiveSummary = (index, title) => {
-  // If the same summary is clicked again, clear the selection
   if (activeDayIndex.value === index && activeTitle.value === title) {
     activeDayIndex.value = null;
     activeTitle.value = null;
   } else {
-    // Otherwise, set the new active summary
     activeDayIndex.value = index;
     activeTitle.value = title;
   }
 };
-
-const activeEvents = computed(() => {
-  if (activeDayIndex.value === null || !activeTitle.value) return [];
-  const weekDays = props.getWeekDays?.(props.selectedDate) || [];
-  const day = weekDays[activeDayIndex.value];
-  if (!day || !Array.isArray(day.events)) return [];
-  return day.events.filter(event => event.title === activeTitle.value);
-});
 </script>
 
 <template>
@@ -87,31 +87,28 @@ const activeEvents = computed(() => {
       Events for Week of {{ selectedDate }}
     </h3>
     <div class="grid grid-cols-7 gap-4 h-min">
-      <div v-for="(day, index) in getWeekDays(selectedDate) || []" :key="index"
+      <div v-for="(day, index) in weekDaysWithSummary" :key="index"
         class="bg-gray-200 dark:bg-[#333] shadow-inner rounded-lg p-2 relative">
         <h4 class="text-sm font-bold mb-2 dark:text-white text-gray-700">{{ day.dateStr }}</h4>
 
-        <div v-if="day.events && day.events.length > 0" class="space-y-1">
-          <div v-for="summary in getEventSummary(day.events)" :key="summary.title"
+        <div v-if="day.eventSummary.length > 0" class="space-y-1">
+          <div v-for="summary in day.eventSummary" :key="summary.title"
             class="px-2 py-1 rounded-md text-xs flex items-center relative shadow-sm cursor-pointer"
             :style="{ backgroundColor: summary.bgColor, color: summary.textColor }"
             @click="toggleActiveSummary(index, summary.title)">
             <span class="mr-1 font-semibold">{{ summary.count }}</span>
             <span>{{ summary.title }}</span>
           </div>
-
-
         </div>
 
         <div v-else class="text-gray-400 text-xs">No events</div>
       </div>
     </div>
 
-    <!-- datails of each summary -->
-     <Transition name="fade" mode="out-in">
+    <Transition name="fade" mode="out-in">
       <div v-if="activeEvents.length > 0" class="mt-4 p-4 rounded-lg bg-gray-100 dark:bg-darkBlue shadow-md">
         <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">
-          Details for {{ activeTitle }} on {{ getWeekDays(selectedDate)[activeDayIndex]?.dateStr }}
+          Details for {{ activeTitle }} on {{ weekDaysWithSummary[activeDayIndex]?.dateStr }}
         </h4>
         <div class="space-y-2">
           <div v-for="event in activeEvents" :key="event.id" class="p-2 border-b border-gray-300 last:border-b-0">
@@ -120,8 +117,7 @@ const activeEvents = computed(() => {
           </div>
         </div>
       </div>
-     </Transition>
-    
+    </Transition>
   </div>
 </template>
 

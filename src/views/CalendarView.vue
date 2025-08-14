@@ -7,6 +7,7 @@ import CalendarWeekView from '@/components/calendar/CalendarWeekView.vue';
 import AddEvents from '@/components/calendar/AddEvents.vue';
 import DayEvents from '@/components/calendar/DayEvents.vue';
 
+// --- State Management ---
 const today = new Date();
 const currentMonth = ref(today.getMonth());
 const currentYear = ref(today.getFullYear());
@@ -32,26 +33,6 @@ const newEventData = ref({
   onlyOneCompletes: false,
   note: '',
 });
-
-const handleDayClick = (day) => {
-  modalDayEvents.value = day.events;
-  modalDayDate.value = day.date;
-  selectedDate.value = day.date;
-  isDayModalOpen.value = true;
-};
-
-const closeDayModal = () => {
-  isDayModalOpen.value = false;
-  modalDayEvents.value = [];
-  modalDayDate.value = '';
-};
-
-const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const monthNames = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
-
 const events = ref([
   { id: 1, date: '2025-07-03T09:00:00', title: 'Team Meeting', color: 'red' },
   { id: 2, date: '2025-07-03T14:30:00', title: 'Call Back', color: 'teal' },
@@ -65,22 +46,49 @@ const events = ref([
   { id: 10, date: '2025-07-03T11:00:00', title: 'Call Back', color: 'teal' },
   { id: 11, date: '2025-07-03T13:00:00', title: 'Follow Up on SA', color: 'purple' },
   { id: 12, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 12, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 12, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 12, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 12, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 12, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 12, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 12, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 12, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 12, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 12, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 13, date: '2025-07-30T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 13, date: '2025-07-30T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 13, date: '2025-07-31T20:00:00', title: 'Team Meeting', color: 'red' },
+  { id: 13, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
 ]);
+const allDepartments = [
+  { id: 1, name: 'Legal' }, { id: 2, name: 'IT' }, { id: 3, name: 'Collections' },
+  { id: 4, name: 'Sales' }, { id: 5, name: 'Admin' }, { id: 6, name: 'HR' },
+];
+const allBranches = [
+  { id: 1, name: 'Lebanon' }, { id: 2, name: 'Kenya' }, { id: 3, name: 'Phillippines' }, { id: 4, name: 'USA' },
+];
+const allPositions = [
+  { id: 1, name: 'Manager' }, { id: 2, name: 'Developer' }, { id: 3, name: 'Designer' },
+  { id: 4, name: 'QA Engineer' }, { id: 5, name: 'Product Owner' },
+];
+const allPeople = [
+  { id: 1, name: 'Ali' }, { id: 2, name: 'Sarah' }, { id: 3, name: 'John' },
+  { id: 4, name: 'Lea' }, { id: 5, name: 'Toni' }, { id: 6, name: 'Maya' },
+  { id: 7, name: 'Omar' }, { id: 8, name: 'Zara' }, { id: 9, name: 'Liam' },
+  { id: 10, name: 'Emma' }, { id: 11, name: 'Noah' }, { id: 12, name: 'Olivia' },
+  { id: 13, name: 'Ava' }, { id: 14, name: 'Sophia' }, { id: 15, name: 'Isabella' },
+];
 
+// --- Data & Computed Properties ---
+const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const monthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+const views = ['Day', 'Week', 'Month'];
 const currentMonthName = computed(() => monthNames[currentMonth.value]);
+
+const colorMap = {
+  red: '#EF4444',
+  teal: '#14B8A6',
+  purple: '#A855F7',
+  yellow: '#F59E0B',
+  blue: '#3B82F6',
+};
+
+const getEventColor = (event) => {
+  const bgColor = colorMap[event.color] || colorMap.blue;
+  const textColor = 'white';
+  return { ...event, bgColor, textColor };
+};
 
 const daysInMonth = computed(() => {
   const year = currentYear.value;
@@ -88,13 +96,11 @@ const daysInMonth = computed(() => {
   const firstDayOfMonth = new Date(year, month, 1);
   const lastDayOfMonth = new Date(year, month + 1, 0);
   const daysInCurrentMonth = lastDayOfMonth.getDate();
-
   const startDay = firstDayOfMonth.getDay();
-  const leadingDaysCount = startDay;
   const days = [];
 
   const prevMonthLastDay = new Date(year, month, 0).getDate();
-  for (let i = leadingDaysCount - 1; i >= 0; i--) {
+  for (let i = startDay - 1; i >= 0; i--) {
     const date = new Date(year, month - 1, prevMonthLastDay - i);
     days.push({
       date: date.toISOString().split('T')[0],
@@ -103,57 +109,23 @@ const daysInMonth = computed(() => {
       isToday: false,
       isSelected: false,
       events: [],
+      eventSummary: [],
     });
   }
 
   for (let i = 1; i <= daysInCurrentMonth; i++) {
     const date = new Date(year, month, i);
+    const dateStr = date.toISOString().split('T')[0];
     const isToday = date.toDateString() === today.toDateString();
-    const isSelected = selectedDate.value === date.toISOString().split('T')[0];
-    const dayEvents = events.value.filter(event => {
-      const eventDate = new Date(event.date);
-      return (
-        eventDate.getFullYear() === date.getFullYear() &&
-        eventDate.getMonth() === date.getMonth() &&
-        eventDate.getDate() === date.getDate()
-      );
-    }).map(event => {
-      let bgColor = '', textColor = 'white';
-      switch (event.color) {
-        case 'red': bgColor = '#EF4444'; break;
-        case 'teal': bgColor = '#14B8A6'; break;
-        case 'purple': bgColor = '#A855F7'; break;
-        case 'yellow': bgColor = '#F59E0B'; break;
-        default: bgColor = '#3B82F6';
-      }
-      return { ...event, bgColor, textColor };
-    });
-
-    // Group and count events by title for summary
-    const summaryMap = {};
-    dayEvents.forEach(event => {
-      if (!summaryMap[event.title]) {
-        summaryMap[event.title] = { count: 1, bgColor: event.bgColor, textColor: event.textColor };
-      } else {
-        summaryMap[event.title].count++;
-      }
-    });
-    const eventSummary = Object.entries(summaryMap).map(([title, info]) => ({
-      title,
-      count: info.count,
-      bgColor: info.bgColor,
-      textColor: info.textColor
-    }));
-
-    days.push({
-      date: date.toISOString().split('T')[0],
-      dayOfMonth: i,
-      isCurrentMonth: true,
-      isToday,
-      isSelected,
-      events: dayEvents,
-      eventSummary,
-    });
+    const isSelected = selectedDate.value === dateStr;
+    const dayEvents = events.value.filter(event => event.date.startsWith(dateStr)).map(getEventColor);
+    const summaryMap = dayEvents.reduce((acc, event) => {
+      if (!acc[event.title]) acc[event.title] = { count: 0, bgColor: event.bgColor, textColor: event.textColor };
+      acc[event.title].count++;
+      return acc;
+    }, {});
+    const eventSummary = Object.entries(summaryMap).map(([title, info]) => ({ title, ...info }));
+    days.push({ date: dateStr, dayOfMonth: i, isCurrentMonth: true, isToday, isSelected, events: dayEvents, eventSummary });
   }
 
   const totalCells = 42;
@@ -181,142 +153,79 @@ const daysInMonth = computed(() => {
 });
 
 const getEventsByHalfAnHour = computed(() => {
-  const intervals = [];
-  // Loop from 8 AM (8) to 6 PM (18)
-  for (let i = 8; i <= 18; i++) {
-    // Add keys for the hour (e.g., 08:00, 09:00, etc.)
-    intervals.push({ hour: i, minutes: 0 });
-    // Add keys for the half-hour (e.g., 08:30, 09:30, etc.)
-    intervals.push({ hour: i, minutes: 30 });
-  }
-
   const eventMap = {};
-  for (const { hour, minutes } of intervals) {
-    const key = `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    eventMap[key] = [];
+  for (let i = 8; i <= 18; i++) {
+    const keyHour = i.toString().padStart(2, '0');
+    eventMap[`${keyHour}:00`] = [];
+    eventMap[`${keyHour}:30`] = [];
   }
-
-  for (const event of events.value) {
+  events.value.forEach(event => {
     const eventDate = new Date(event.date);
-    const selected = new Date(selectedDate.value);
-
-    const eventDateStr = eventDate.getFullYear() + '-' + String(eventDate.getMonth() + 1).padStart(2, '0') + '-' + String(eventDate.getDate()).padStart(2, '0');
-
+    const eventDateStr = eventDate.toISOString().split('T')[0];
     if (eventDateStr === selectedDate.value) {
       const hour = eventDate.getHours();
-      // Check if the event's hour is within the desired range (8 AM to 6 PM)
-      if (hour >= 8 && hour < 19) {
-        const minutes = eventDate.getMinutes() - (eventDate.getMinutes() % 30);
-        const key = `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-
-        let bgColor = '', textColor = 'white';
-        switch (event.color) {
-          case 'red': bgColor = '#EF4444'; break;
-          case 'teal': bgColor = '#14B8A6'; break;
-          case 'purple': bgColor = '#A855F7'; break;
-          case 'yellow': bgColor = '#F59E0B'; break;
-          default: bgColor = '#3B82F6';
-        }
-
-        eventMap[key].push({
-          ...event,
-          bgColor,
-          textColor,
-          timeStr: eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        });
+      const minutes = eventDate.getMinutes();
+      if (hour >= 8 && hour <= 18) {
+        const keyMinutes = minutes - (minutes % 30);
+        const key = `${hour.toString().padStart(2, '0')}:${keyMinutes.toString().padStart(2, '0')}`;
+        eventMap[key]?.push({ ...getEventColor(event), timeStr: eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
       }
     }
-  }
-
+  });
   return eventMap;
 });
 
 const getOutOfRangeEvents = computed(() => {
-  const outOfRange = [];
-  for (const event of events.value) {
+  return events.value.filter(event => {
     const eventDate = new Date(event.date);
-    const eventDateStr = eventDate.getFullYear() + '-' + String(eventDate.getMonth() + 1).padStart(2, '0') + '-' + String(eventDate.getDate()).padStart(2, '0');
-
-    if (eventDateStr === selectedDate.value) {
-      const hour = eventDate.getHours();
-      if (hour < 8 || hour >= 19) {
-        let bgColor = '', textColor = 'white';
-        switch (event.color) {
-          case 'red': bgColor = '#EF4444'; break;
-          case 'teal': bgColor = '#14B8A6'; break;
-          case 'purple': bgColor = '#A855F7'; break;
-          case 'yellow': bgColor = '#F59E0B'; break;
-          default: bgColor = '#3B82F6';
-        }
-
-        outOfRange.push({
-          ...event,
-          bgColor,
-          textColor,
-          timeStr: eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        });
-      }
-    }
-  }
-  return outOfRange;
+    const eventDateStr = eventDate.toISOString().split('T')[0];
+    const hour = eventDate.getHours();
+    return eventDateStr === selectedDate.value && (hour < 8 || hour > 18);
+  }).map(event => ({ ...getEventColor(event), timeStr: new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }));
 });
 
 const getWeekDays = (centerDate) => {
   const date = new Date(centerDate);
-  const dayOfWeek = date.getDay(); // 0 = Sun
+  const dayOfWeek = date.getDay();
   const weekStart = new Date(date);
   weekStart.setDate(date.getDate() - dayOfWeek);
-
+  
   return Array.from({ length: 7 }, (_, i) => {
     const day = new Date(weekStart);
     day.setDate(weekStart.getDate() + i);
     const dateStr = day.toISOString().split('T')[0];
-
     const dayEvents = daysInMonth.value.find(d => d.date === dateStr)?.events || [];
-
-    return {
-      dateStr,
-      events: dayEvents,
-    };
+    return { dateStr, events: dayEvents };
   });
 };
 
+const activeViewComponent = computed(() => {
+  const viewsMap = { Month: CalendarMonthGrid, Day: CalendarDayView, Week: CalendarWeekView };
+  return viewsMap[activeView.value] || CalendarMonthGrid;
+});
+
+// --- Event Handlers & Logic ---
+const handleDayClick = (day) => {
+  modalDayEvents.value = day.events;
+  modalDayDate.value = day.date;
+  selectedDate.value = day.date;
+  isDayModalOpen.value = true;
+};
+
+const closeDayModal = () => {
+  isDayModalOpen.value = false;
+  modalDayEvents.value = [];
+  modalDayDate.value = '';
+};
+
 const previousMonth = () => {
-  if (currentMonth.value === 0) {
-    currentMonth.value = 11;
-    currentYear.value--;
-  } else {
-    currentMonth.value--;
-  }
+  currentMonth.value = currentMonth.value === 0 ? 11 : currentMonth.value - 1;
+  if (currentMonth.value === 11) currentYear.value--;
 };
 
 const nextMonth = () => {
-  if (currentMonth.value === 11) {
-    currentMonth.value = 0;
-    currentYear.value++;
-  } else {
-    currentMonth.value++;
-  }
-};
-
-const handlePrevious = () => {
-  if (activeView.value === 'Month') {
-    previousMonth();
-  } else if (activeView.value === 'Day') {
-    previousDay();
-  } else if (activeView.value === 'Week') {
-    previousWeek();
-  }
-};
-
-const handleNext = () => {
-  if (activeView.value === 'Month') {
-    nextMonth();
-  } else if (activeView.value === 'Day') {
-    nextDay();
-  } else if (activeView.value === 'Week') {
-    nextWeek();
-  }
+  currentMonth.value = currentMonth.value === 11 ? 0 : currentMonth.value + 1;
+  if (currentMonth.value === 0) currentYear.value++;
 };
 
 const previousDay = () => {
@@ -343,73 +252,15 @@ const nextWeek = () => {
   selectedDate.value = date.toISOString().split('T')[0];
 };
 
-const addNewEvent = (dateStr) => {
-  const newEvent = {
-    id: events.value.length + 1,
-    date: `${dateStr}T12:00:00`, // Default time
-    title: 'New Event',
-    color: 'blue', // Default color
-  };
-
-  events.value.push(newEvent);
-
-  // Refresh modal events immediately
-  const dayEvents = events.value.filter(event => event.date.startsWith(dateStr)).map(event => {
-    let bgColor = '', textColor = 'white';
-    switch (event.color) {
-      case 'red': bgColor = '#EF4444'; break;
-      case 'teal': bgColor = '#14B8A6'; break;
-      case 'purple': bgColor = '#A855F7'; break;
-      case 'yellow': bgColor = '#F59E0B'; break;
-      default: bgColor = '#3B82F6';
-    }
-    return { ...event, bgColor, textColor };
-  });
-
-  modalDayEvents.value = dayEvents;
+const handlePrevious = () => {
+  const handlers = { Month: previousMonth, Day: previousDay, Week: previousWeek };
+  handlers[activeView.value]();
 };
 
-const allDepartments = [
-  { id: 1, name: 'Legal' },
-  { id: 2, name: 'IT' },
-  { id: 3, name: 'Collections' },
-  { id: 4, name: 'Sales' },
-  { id: 5, name: 'Admin' },
-  { id: 6, name: 'HR' },
-];
-
-const allBranches = [
-  { id: 1, name: 'Lebanon' },
-  { id: 2, name: 'Kenya' },
-  { id: 3, name: 'Phillippines' },
-  { id: 4, name: 'USA' },
-];
-
-const allPositions = [
-  { id: 1, name: 'Manager' },
-  { id: 2, name: 'Developer' },
-  { id: 3, name: 'Designer' },
-  { id: 4, name: 'QA Engineer' },
-  { id: 5, name: 'Product Owner' },
-];
-
-const allPeople = [
-  { id: 1, name: 'Ali' },
-  { id: 2, name: 'Sarah' },
-  { id: 3, name: 'John' },
-  { id: 4, name: 'Lea' },
-  { id: 5, name: 'Toni' },
-  { id: 6, name: 'Maya' },
-  { id: 7, name: 'Omar' },
-  { id: 8, name: 'Zara' },
-  { id: 9, name: 'Liam' },
-  { id: 10, name: 'Emma' },
-  { id: 11, name: 'Noah' },
-  { id: 12, name: 'Olivia' },
-  { id: 13, name: 'Ava' },
-  { id: 14, name: 'Sophia' },
-  { id: 15, name: 'Isabella' },
-];
+const handleNext = () => {
+  const handlers = { Month: nextMonth, Day: nextDay, Week: nextWeek };
+  handlers[activeView.value]();
+};
 
 const togglePeopleDropdown = () => {
   peopleDropdownOpen.value = !peopleDropdownOpen.value;
@@ -419,27 +270,16 @@ const closeDropdown = () => {
   peopleDropdownOpen.value = false;
 };
 
-
-const onClickOutside = (element, callback) => {
-  const handler = (e) => {
-    if (!element.contains(e.target)) callback();
-  };
-  onMounted(() => document.addEventListener('click', handler));
-  onUnmounted(() => document.removeEventListener('click', handler));
-}
-
 const handleAddEventCancel = () => {
   isAddEventModalOpen.value = false;
   isDayModalOpen.value = true;
 };
 
-onClickOutside(document, closeDropdown);
-
 const saveNewEvent = () => {
   const eventDateTime = `${modalDayDate.value}T${newEventData.value.time}`;
-
+  const newId = events.value.length ? Math.max(...events.value.map(e => e.id)) + 1 : 1;
   events.value.push({
-    id: events.value.length + 1,
+    id: newId,
     date: eventDateTime,
     title: newEventData.value.type || 'Untitled',
     color: 'blue',
@@ -455,60 +295,25 @@ const saveNewEvent = () => {
     note: newEventData.value.note,
   });
 
-  // Refresh modal
-  const refreshed = events.value.filter(e => e.date.startsWith(modalDayDate.value)).map(event => {
-    let bgColor = '', textColor = 'white';
-    switch (event.color) {
-      case 'red': bgColor = '#EF4444'; break;
-      case 'teal': bgColor = '#14B8A6'; break;
-      case 'purple': bgColor = '#A855F7'; break;
-      case 'yellow': bgColor = '#F59E0B'; break;
-      default: bgColor = '#3B82F6';
-    }
-    return { ...event, bgColor, textColor };
-  });
-
-  modalDayEvents.value = refreshed;
+  const refreshedEvents = events.value.filter(e => e.date.startsWith(modalDayDate.value)).map(getEventColor);
+  modalDayEvents.value = refreshedEvents;
   isAddEventModalOpen.value = false;
 
   // Reset form
   newEventData.value = {
-    type: '',
-    time: '12:00',
-    preReminderValue: '5',
-    preReminderUnit: 'minutes',
-    frequencyPattern: 'doNotRepeat',
-    frequencyDays: [],
-    frequencyDates: [],
-    priority: '',
-    visibilityType: 'Only Me',
-    visibilityValue: [],
-    onlyOneCompletes: false,
-    note: '',
+    type: '', time: '12:00', preReminderValue: '5', preReminderUnit: 'minutes',
+    frequencyPattern: 'doNotRepeat', frequencyDays: [], frequencyDates: [],
+    priority: '', visibilityType: 'Only Me', visibilityValue: [],
+    onlyOneCompletes: false, note: '',
   };
 };
 
-
-
-// const selectDay = (dateString) => {
-//   selectedDate.value = dateString;
-// };
-
-const views = ['Day', 'Week', 'Month'];
-
-const activeViewComponent = computed(() => {
-  switch (activeView.value) {
-    case 'Month':
-      return CalendarMonthGrid;
-    case 'Day':
-      return CalendarDayView;
-    case 'Week':
-      return CalendarWeekView;
-    default:
-      return CalendarMonthGrid;
-  }
+onMounted(() => {
+  document.addEventListener('click', closeDropdown);
 });
-
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdown);
+});
 
 </script>
 
@@ -518,19 +323,15 @@ const activeViewComponent = computed(() => {
       class="max-w-[1600px] mx-auto my-10 flex justify-center items-center rounded-xl shadow-outer dark:bg-darkPurple bg-[rgba(90,169,230,.35)] border dark:border-lightBlue border-clientPurple px-8 py-4 overflow-hidden transition-all duration-300 ease">
       <div class="p-6 w-full max-w-6xl">
         <CalendarHeader   
-        :currentMonthName="currentMonthName"
-        :currentYear="currentYear"
-        :selectedDate="selectedDate"
-        :handlePrevious="handlePrevious"
-        :handleNext="handleNext"
-        :views="views"
-        :activeView="activeView"
-        :isOpen="isAddEventModalOpen"
-        @update:activeView="(view) => activeView = view"
-        @add-event="() => { 
-        isAddEventModalOpen = true;
-        isDayModalOpen = false;
-        }"
+          :currentMonthName="currentMonthName"
+          :currentYear="currentYear"
+          :selectedDate="selectedDate"
+          :handlePrevious="handlePrevious"
+          :handleNext="handleNext"
+          :views="views"
+          :activeView="activeView"
+          @update:activeView="(view) => activeView = view"
+          @add-event="() => { isAddEventModalOpen = true; isDayModalOpen = false; }"
         />
 
         <Transition name="fade" mode="out-in">
@@ -548,11 +349,11 @@ const activeViewComponent = computed(() => {
         </Transition>
 
         <DayEvents
-        :isOpen="isDayModalOpen"
-        :date="modalDayDate"
-        :events="modalDayEvents"
-        @close="closeDayModal"
-        @add-event="() => { isDayModalOpen = false; isAddEventModalOpen = true }"
+          :isOpen="isDayModalOpen"
+          :date="modalDayDate"
+          :events="modalDayEvents"
+          @close="closeDayModal"
+          @add-event="() => { isDayModalOpen = false; isAddEventModalOpen = true }"
         />
         <AddEvents
           :isOpen="isAddEventModalOpen"
@@ -569,22 +370,19 @@ const activeViewComponent = computed(() => {
           @toggle-people-dropdown="togglePeopleDropdown"
           @update-frequency-mode="(mode) => frequencyMode = mode"
           @update:newEventData="newValue => newEventData = newValue"
-      />
-
+        />
       </div>
     </section>
   </main>
 </template>
 
 <style scoped>
-
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.3s ease;
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
-
 
 ::-webkit-scrollbar {
   display: none;

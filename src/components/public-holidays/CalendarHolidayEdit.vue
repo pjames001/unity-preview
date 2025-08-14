@@ -6,26 +6,28 @@ const props = defineProps({
   isOpen: {
     type: Boolean,
     default: false
+  },
+  holiday: {
+    type: Object,
+    default: null
   }
 });
 
-const emit = defineEmits(['close', 'save']);
+const emit = defineEmits(['close', 'save', 'delete']);
 
 // --- Form State ---
 const holidayName = ref('');
-const holidayDate = ref(new Date().toISOString().slice(0, 10)); // YYYY-MM-DD format
+const holidayDate = ref(new Date().toISOString().slice(0, 10));
 const selectedOfficeLocations = ref([]);
 const selectedHolidayType = ref(null);
 const selectedDayNumber = ref(null);
 const selectedDayName = ref(null);
 const selectedMonth = ref(null);
 const isPaid = ref(null);
-
-// --- Dropdown/Modal State ---
 const openLocationMenu = ref(false);
 
-// --- Dummy Data ---
-const officeLocations = ref(['Headquarters', 'Branch A', 'Branch B', 'Remote']);
+// --- Static Data ---
+const officeLocations = ref(['All', 'Headquarters', 'Branch A', 'Branch B', 'Remote']);
 const holidayTypes = ref(['One-time holiday', 'Annual fixed date', 'Annual variable date']);
 const dayNumbers = ref(['First', 'Second', 'Third', 'Fourth', 'Last']);
 const dayNames = ref(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
@@ -39,74 +41,86 @@ const showVariableDateInputs = computed(() => selectedHolidayType.value === 'Ann
 
 // --- Watchers ---
 watch(() => props.isOpen, (newValue) => {
-  if (newValue) {
+  if (newValue && props.holiday) {
+    populateForm(props.holiday);
+  } else {
     resetForm();
   }
 });
 
-watch(selectedHolidayType, (newType) => {
-  if (newType === 'Annual variable date') {
-    holidayDate.value = null;
-    isPaid.value = null;
-  } else {
-    selectedDayNumber.value = null;
-    selectedDayName.value = null;
-    selectedMonth.value = null;
-  }
-});
-
 // --- Event Handlers & Methods ---
+const populateForm = (holiday) => {
+  holidayName.value = holiday.name || '';
+  selectedHolidayType.value = holiday.type || null;
+  isPaid.value = holiday.isPaid !== undefined ? holiday.isPaid : null;
+
+  if (holiday.officeLocations && holiday.officeLocations.includes('All')) {
+    selectedOfficeLocations.value = ['All'];
+  } else {
+    selectedOfficeLocations.value = holiday.officeLocations ? [...holiday.officeLocations] : [];
+  }
+
+  if (holiday.type === 'Annual variable date') {
+    selectedDayNumber.value = holiday.dayNumber || null;
+    selectedDayName.value = holiday.dayName || null;
+    selectedMonth.value = holiday.month || null;
+  } else {
+    holidayDate.value = holiday.date || new Date().toISOString().slice(0, 10);
+  }
+};
+
 const resetForm = () => {
   holidayName.value = '';
-  holidayDate.value = new Date().toISOString().slice(0, 10);
   selectedOfficeLocations.value = [];
   selectedHolidayType.value = null;
+  isPaid.value = null;
+  holidayDate.value = new Date().toISOString().slice(0, 10);
   selectedDayNumber.value = null;
   selectedDayName.value = null;
   selectedMonth.value = null;
-  isPaid.value = null;
-};
-
-const handleSave = () => {
-  const isFormValid = validateForm();
-  if (isFormValid) {
-    const newHoliday = {
-      name: holidayName.value,
-      officeLocations: selectedOfficeLocations.value,
-      type: selectedHolidayType.value,
-    };
-
-    if (showVariableDateInputs.value) {
-      Object.assign(newHoliday, {
-        dayNumber: selectedDayNumber.value,
-        dayName: selectedDayName.value,
-        month: selectedMonth.value,
-        isPaid: isPaid.value,
-      });
-    } else {
-      Object.assign(newHoliday, {
-        date: holidayDate.value,
-        isPaid: isPaid.value,
-      });
-    }
-
-    emit('save', newHoliday);
-  } else {
-    console.log('Please fill in all required fields.');
-  }
 };
 
 const validateForm = () => {
-  const commonFieldsValid =
-    holidayName.value &&
-    selectedHolidayType.value &&
-    selectedOfficeLocations.value.length > 0 &&
-    isPaid.value !== null;
+  const commonValid = holidayName.value && selectedHolidayType.value && selectedOfficeLocations.value.length > 0 && isPaid.value !== null;
+  
+  if (showVariableDateInputs.value) {
+    return commonValid && selectedDayNumber.value && selectedDayName.value && selectedMonth.value;
+  }
+  return commonValid && holidayDate.value;
+};
+
+const handleSave = () => {
+  if (!validateForm()) {
+    console.log('Please fill in all fields.');
+    return;
+  }
+
+  const updatedHoliday = {
+    id: props.holiday.id,
+    name: holidayName.value,
+    officeLocations: selectedOfficeLocations.value,
+    type: selectedHolidayType.value,
+    isPaid: isPaid.value,
+  };
 
   if (showVariableDateInputs.value) {
-    return commonFieldsValid && selectedDayNumber.value && selectedDayName.value && selectedMonth.value;
+    Object.assign(updatedHoliday, {
+      dayNumber: selectedDayNumber.value,
+      dayName: selectedDayName.value,
+      month: selectedMonth.value
+    });
   } else {
-    return commonFieldsValid && holidayDate.value;
+    Object.assign(updatedHoliday, {
+      date: holidayDate.value
+    });
+  }
+
+  emit('save', updatedHoliday);
+};
+
+const handleDelete = () => {
+  if (confirm(`Are you sure you want to delete ${props.holiday.name}?`)) {
+    emit('delete', props.holiday.id);
   }
 };
 
@@ -115,11 +129,18 @@ const handleClose = () => {
 };
 
 const toggleLocationSelection = (location) => {
-  const index = selectedOfficeLocations.value.indexOf(location);
-  if (index === -1) {
-    selectedOfficeLocations.value.push(location);
+  if (location === 'All') {
+    selectedOfficeLocations.value = selectedOfficeLocations.value.includes('All') ? [] : ['All'];
   } else {
-    selectedOfficeLocations.value.splice(index, 1);
+    const allIndex = selectedOfficeLocations.value.indexOf('All');
+    if (allIndex !== -1) selectedOfficeLocations.value.splice(allIndex, 1);
+    
+    const index = selectedOfficeLocations.value.indexOf(location);
+    if (index === -1) {
+      selectedOfficeLocations.value.push(location);
+    } else {
+      selectedOfficeLocations.value.splice(index, 1);
+    }
   }
 };
 
@@ -145,7 +166,7 @@ const vClickOutside = {
         
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-xl font-bold text-gray-800 dark:text-white">
-            Create New Holiday
+            Edit Holiday
           </h3>
           <button @click="handleClose" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
@@ -205,19 +226,20 @@ const vClickOutside = {
               class="mt-1 px-3 py-2 block w-full rounded-md border border-gray-400 dark:border-gray-600 shadow-sm dark:bg-gray-800 bg-white dark:text-white text-gray-700 outline-none">
           </div>
 
-          <div v-if="showVariableDateInputs" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div v-if="showVariableDateInputs" class="space-y-4">
             <div>
               <label for="dayNumber" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
                 Day Number
               </label>
               <select id="dayNumber" v-model="selectedDayNumber"
                 class="mt-1 px-3 py-2 block w-full rounded-md border border-gray-400 dark:border-gray-600 shadow-sm dark:bg-gray-800 bg-white dark:text-white text-gray-700 outline-none">
-                <option :value="null" disabled>Select a day number</option>
+                <option :value="null" disabled>Select a day</option>
                 <option v-for="day in dayNumbers" :key="day" :value="day">
                   {{ day }}
                 </option>
               </select>
             </div>
+
             <div>
               <label for="dayName" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
                 Select Day
@@ -230,6 +252,7 @@ const vClickOutside = {
                 </option>
               </select>
             </div>
+
             <div>
               <label for="month" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
                 Month
@@ -275,15 +298,21 @@ const vClickOutside = {
           </div>
         </div>
 
-        <div class="mt-6 flex justify-end gap-2">
-          <button @click="handleClose"
-            class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
-            Cancel
+        <div class="mt-6 flex justify-between gap-2">
+          <button @click="handleDelete"
+            class="px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700">
+            Delete Holiday
           </button>
-          <button @click="handleSave"
-            class="px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-            Save Holiday
-          </button>
+          <div class="flex gap-2">
+            <button @click="handleClose"
+              class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+              Cancel
+            </button>
+            <button @click="handleSave"
+              class="px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+              Save Holiday
+            </button>
+          </div>
         </div>
       </div>
     </div>

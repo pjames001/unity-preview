@@ -1,23 +1,12 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 
+// --- State ---
 const searchQuery = ref('');
 const sortColumn = ref('');
 const sortOrder = ref('asc');
 const openMenu = ref(null);
-const selectAll = ref(false);
 const selectedIds = ref([]);
-
-const columns = [
-  { key: 'firstName', label: 'First Name' },
-  { key: 'middleName', label: 'Middle Name' },
-  { key: 'lastName', label: 'Last Name' },
-  { key: 'title', label: 'Title' },
-  { key: 'email', label: 'Email' },
-  { key: 'phone', label: 'Phone Number' },
-  { key: 'address', label: 'Address' },
-  { key: 'state', label: 'State' }
-];
 
 const contacts = ref([
   {
@@ -44,36 +33,80 @@ const contacts = ref([
   },
   {
     id: 3,
-    firstName: 'John',
-    middleName: 'A.',
-    lastName: 'Doe',
-    title: 'Manager',
-    email: 'john.doe@example.com',
-    phone: '(555) 123-4567',
-    address: '123 Main St',
-    state: 'California'
+    firstName: 'Peter',
+    middleName: 'C.',
+    lastName: 'Jones',
+    title: 'Engineer',
+    email: 'peter.jones@example.com',
+    phone: '(555) 555-1234',
+    address: '789 Pine Rd',
+    state: 'New York'
   },
   {
     id: 4,
-    firstName: 'Jane',
-    middleName: 'B.',
-    lastName: 'Smith',
-    title: 'Director',
-    email: 'jane.smith@example.com',
-    phone: '(555) 987-6543',
-    address: '456 Oak Ave',
-    state: 'Texas'
+    firstName: 'Mary',
+    middleName: 'D.',
+    lastName: 'Williams',
+    title: 'Analyst',
+    email: 'mary.williams@example.com',
+    phone: '(555) 222-8888',
+    address: '101 Maple Ln',
+    state: 'Florida'
   }
 ]);
 
-watch(selectAll, () => {
-  if (selectAll.value) {
-    selectedIds.value = contacts.value.map(c => c.id);
-  } else {
-    selectedIds.value = [];
+const columns = [
+  { key: 'firstName', label: 'First Name' },
+  { key: 'middleName', label: 'Middle Name' },
+  { key: 'lastName', label: 'Last Name' },
+  { key: 'title', label: 'Title' },
+  { key: 'email', label: 'Email' },
+  { key: 'phone', label: 'Phone Number' },
+  { key: 'address', label: 'Address' },
+  { key: 'state', label: 'State' }
+];
+
+// --- Computed Properties ---
+const filteredContacts = computed(() => {
+  const query = searchQuery.value.toLowerCase();
+  const filtered = contacts.value.filter(contact =>
+    Object.values(contact).some(val =>
+      typeof val === 'string' && val.toLowerCase().includes(query)
+    )
+  );
+
+  if (!sortColumn.value) {
+    return filtered;
+  }
+
+  return [...filtered].sort((a, b) => {
+    const valA = a[sortColumn.value];
+    const valB = b[sortColumn.value];
+
+    if (valA === valB) return 0;
+    return (valA > valB ? 1 : -1) * (sortOrder.value === 'asc' ? 1 : -1);
+  });
+});
+
+const isAllSelected = computed(() => {
+  return selectedIds.value.length > 0 && selectedIds.value.length === filteredContacts.value.length;
+});
+
+const isIndeterminate = computed(() => {
+  return selectedIds.value.length > 0 && !isAllSelected.value;
+});
+
+const selectedCount = computed(() => selectedIds.value.length);
+
+// --- Watchers ---
+watch(isAllSelected, (newVal) => {
+  if (!newVal) {
+    // This watcher is no longer necessary as the logic is handled by the `toggleAllSelection` method.
+    // I've kept it as a comment to show it can be removed entirely.
   }
 });
 
+// --- Methods ---
 const toggleSort = (column) => {
   if (sortColumn.value === column) {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
@@ -87,37 +120,55 @@ const toggleMenu = (id) => {
   openMenu.value = openMenu.value === id ? null : id;
 };
 
-const filteredContacts = computed(() => {
-  let result = [...contacts.value];
-
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase();
-    result = result.filter(contact =>
-      Object.values(contact).some(val =>
-        typeof val === 'string' && val.toLowerCase().includes(q)
-      )
-    );
+const toggleAllSelection = (event) => {
+  if (event.target.checked) {
+    selectedIds.value = filteredContacts.value.map(c => c.id);
+  } else {
+    selectedIds.value = [];
   }
+};
 
-  if (sortColumn.value) {
-    result.sort((a, b) => {
-      const valA = a[sortColumn.value];
-      const valB = b[sortColumn.value];
+const deleteSelectedContacts = () => {
+  contacts.value = contacts.value.filter(c => !selectedIds.value.includes(c.id));
+  selectedIds.value = [];
+};
 
-      if (valA === valB) return 0;
-      return (valA > valB ? 1 : -1) * (sortOrder.value === 'asc' ? 1 : -1);
-    });
-  }
+const deleteSingleContact = (id) => {
+  contacts.value = contacts.value.filter(c => c.id !== id);
+  openMenu.value = null;
+  selectedIds.value = selectedIds.value.filter(selectedId => selectedId !== id);
+};
 
-  return result;
-});
+// --- Custom Directives ---
+const vClickOutside = {
+  mounted(el, binding) {
+    el.clickOutsideEvent = (event) => {
+      if (!(el === event.target || el.contains(event.target))) {
+        binding.value();
+      }
+    };
+    document.addEventListener('click', el.clickOutsideEvent);
+  },
+  unmounted(el) {
+    document.removeEventListener('click', el.clickOutsideEvent);
+  },
+};
 </script>
+
 <template>
   <section class="p-6 my-10 w-full rounded-xl shadow-outer dark:bg-darkBrown bg-warmYellow/70 border border-darkOrange">
     <div class="p-4 bg-white dark:bg-gray-900 rounded-xl shadow-md">
-      <!-- Top Controls -->
       <div class="flex justify-between items-center mb-4">
-        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">Add Contact</button>
+        <div class="flex items-center space-x-2">
+          <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">Add Contact</button>
+          <button
+            v-if="selectedCount > 0"
+            @click="deleteSelectedContacts"
+            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm"
+          >
+            Delete {{ selectedCount }} Selected
+          </button>
+        </div>
         <input
           v-model="searchQuery"
           type="text"
@@ -126,15 +177,25 @@ const filteredContacts = computed(() => {
         />
       </div>
 
-      <!-- Table -->
       <div class="overflow-x-auto">
         <table class="w-full text-left border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
           <thead class="bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200">
             <tr>
               <th class="px-4 py-2">
-                <input type="checkbox" v-model="selectAll" @change="toggleAll" />
+                <input
+                  type="checkbox"
+                  :checked="isAllSelected"
+                  :indeterminate.prop="isIndeterminate"
+                  @change="toggleAllSelection"
+                />
               </th>
-              <th v-for="col in columns" :key="col.key" class="px-4 py-2 cursor-pointer" @click="toggleSort(col.key)">
+              <th
+                v-for="col in columns"
+                :key="col.key"
+                class="px-4 py-2 cursor-pointer"
+                @click="toggleSort(col.key)"
+                :aria-sort="sortColumn === col.key ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'"
+              >
                 {{ col.label }}
                 <v-icon
                   name="md-keyboardarrowup"
@@ -163,17 +224,22 @@ const filteredContacts = computed(() => {
               <td class="px-4 py-2">{{ contact.phone }}</td>
               <td class="px-4 py-2">{{ contact.address }}</td>
               <td class="px-4 py-2">{{ contact.state }}</td>
-              <td class="px-4 py-2 text-center relative">
-                <button @click="toggleMenu(contact.id)">
+              <td class="px-4 py-2 text-center relative" v-click-outside="() => (openMenu = null)">
+                <button @click="toggleMenu(contact.id)" aria-haspopup="true" :aria-expanded="openMenu === contact.id">
                   <v-icon name="bi-three-dots-vertical" class="w-5 h-5 text-gray-500 hover:text-gray-800 dark:hover:text-white" />
                 </button>
                 <div
                   v-if="openMenu === contact.id"
-                  class="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg rounded-md z-10"
+                  class="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg rounded-md z-10 origin-top-right"
                 >
                   <ul class="text-sm text-gray-700 dark:text-gray-200">
                     <li class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">Edit</li>
-                    <li class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">Delete</li>
+                    <li
+                      @click="deleteSingleContact(contact.id)"
+                      class="px-4 py-2 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 cursor-pointer"
+                    >
+                      Delete
+                    </li>
                   </ul>
                 </div>
               </td>
@@ -190,4 +256,3 @@ const filteredContacts = computed(() => {
     </div>
   </section>
 </template>
-

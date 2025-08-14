@@ -353,15 +353,6 @@ watch(
 );
 
 
-// watch(
-//   () => props.mode,
-//   (newMode) => {
-//     currentEntityType.value = newMode === 'client' ? 'clients' : 'leads';
-//   },
-//   { immediate: true }
-// );
-
-
 const close = () => emit('close');
 
 const submit = () => {

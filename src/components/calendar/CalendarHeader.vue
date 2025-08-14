@@ -1,42 +1,45 @@
 <script setup>
 import { computed } from 'vue';
 
+// --- Props & Emits ---
 const props = defineProps({
   currentMonthName: String,
   currentYear: [String, Number],
   selectedDate: String,
   views: Array,
   activeView: String,
-  isOpen: Boolean,
-  handlePrevious: Function, // Corrected prop name
-  handleNext: Function,     // Corrected prop name
+  handlePrevious: Function,
+  handleNext: Function,
 });
 
 defineEmits(['update:activeView', 'add-event']);
 
+// --- Computed Properties ---
 const headerDateDisplay = computed(() => {
+  const date = new Date(props.selectedDate);
+
   if (props.activeView === 'Month') {
     return `${props.currentMonthName} ${props.currentYear}`;
-  } else {
-    const date = new Date(props.selectedDate);
-    if (props.activeView === 'Day') {
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      return date.toLocaleDateString('en-US', options);
-    }
-    // Week view
-    const startOfWeek = new Date(date);
-    startOfWeek.setDate(date.getDate() - date.getDay());
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-    const startOptions = { month: 'long', day: 'numeric' };
-    const endOptions = { month: 'long', day: 'numeric', year: 'numeric' };
-
-    const startString = startOfWeek.toLocaleDateString('en-US', startOptions);
-    const endString = endOfWeek.toLocaleDateString('en-US', endOptions);
-
-    return `${startString} - ${endString}`;
   }
+
+  if (props.activeView === 'Day') {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  }
+
+  // Week view
+  const startOfWeek = new Date(date);
+  startOfWeek.setDate(date.getDate() - date.getDay());
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+  const startOptions = { month: 'long', day: 'numeric' };
+  const endOptions = { month: 'long', day: 'numeric', year: 'numeric' };
+
+  const startString = startOfWeek.toLocaleDateString('en-US', startOptions);
+  const endString = endOfWeek.toLocaleDateString('en-US', endOptions);
+
+  return `${startString} - ${endString}`;
 });
 </script>
 
@@ -70,16 +73,7 @@ const headerDateDisplay = computed(() => {
           {{ view }}
         </button>
       </div>
-      <button
-        class="flex items-center px-6 py-4 dark:bg-navbtn bg-white border dark:border-lightBlue border-transparent dark:text-white text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors duration-200 text-sm  font-medium shadow-outer"
-      >
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM4 7h16v10a1 1 0 01-1 1H4a1 1 0 01-1-1V7z">
-          </path>
-        </svg>
-        View Filters
-      </button>
+
       <button
         class="flex items-center px-6 py-4 dark:bg-darkBlue bg-blue-600 border dark:border-lightBlue dark:text-lightBlue text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm  font-medium shadow-outer"
         @click="$emit('add-event')"

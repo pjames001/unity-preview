@@ -1,6 +1,13 @@
 <script setup>
 import { ref, computed, watch } from "vue";
 
+// --- State ---
+const searchQuery = ref("");
+const selectedIds = ref([]);
+const selectAll = ref(false);
+const sortColumn = ref("date");
+const sortOrder = ref("asc");
+
 const calls = ref([
   {
     id: 1,
@@ -41,61 +48,29 @@ const columns = [
   { key: "notes", label: "Notes" },
 ];
 
-const searchQuery = ref("");
-const selectedIds = ref([]);
-const selectAll = ref(false);
-
-const sortColumn = ref("date");
-const sortOrder = ref("asc");
-
-// Watch selectAll to toggle selectedIds accordingly
-watch(selectAll, (val) => {
-  if (val) {
-    selectedIds.value = calls.value.map((c) => c.id);
-  } else {
-    selectedIds.value = [];
-  }
-});
-
-// Toggle sort by column
-function toggleSort(col) {
-  if (sortColumn.value === col) {
-    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
-  } else {
-    sortColumn.value = col;
-    sortOrder.value = "asc";
-  }
-}
-
-// format date nicely
-function formatDate(dateStr) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString();
-}
-
-// Computed filtered and sorted calls
+// --- Computed Properties ---
 const filteredCalls = computed(() => {
-  let filtered = calls.value.filter((call) => {
-    const search = searchQuery.value.toLowerCase();
-    return (
-      call.from.toLowerCase().includes(search) ||
-      call.to.toLowerCase().includes(search) ||
-      call.disposition.toLowerCase().includes(search) ||
-      call.notes.toLowerCase().includes(search)
-    );
-  });
+  const query = searchQuery.value.toLowerCase();
+  
+  const filtered = calls.value.filter(call =>
+    Object.values(call).some(val => 
+      typeof val === 'string' && val.toLowerCase().includes(query)
+    )
+  );
 
-  filtered.sort((a, b) => {
+  if (!sortColumn.value) {
+    return filtered;
+  }
+
+  return [...filtered].sort((a, b) => {
     let valA = a[sortColumn.value];
     let valB = b[sortColumn.value];
 
-    // Special handling for date column
     if (sortColumn.value === "date") {
       valA = new Date(valA);
       valB = new Date(valB);
     }
 
-    // For recording column, sort by presence of recordingUrl
     if (sortColumn.value === "recording") {
       valA = a.recordingUrl ? 1 : 0;
       valB = b.recordingUrl ? 1 : 0;
@@ -105,16 +80,28 @@ const filteredCalls = computed(() => {
     if (valA > valB) return sortOrder.value === "asc" ? 1 : -1;
     return 0;
   });
-
-  return filtered;
 });
+
+// --- Methods ---
+function toggleSort(col) {
+  if (sortColumn.value === col) {
+    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
+  } else {
+    sortColumn.value = col;
+    sortOrder.value = "asc";
+  }
+}
+
+function formatDate(dateStr) {
+  return new Date(dateStr).toLocaleDateString();
+}
 </script>
+
 <template>
   <section
     class="p-6 my-10 w-full rounded-xl shadow-outer dark:bg-darkBrown bg-warmYellow/70 border border-darkOrange"
   >
     <div class="p-4 bg-white dark:bg-gray-900 rounded-xl shadow-md">
-      <!-- Top Controls -->
       <div class="flex justify-between items-center mb-4">
         <input
           v-model="searchQuery"
@@ -124,7 +111,6 @@ const filteredCalls = computed(() => {
         />
       </div>
 
-      <!-- Table -->
       <div class="overflow-x-auto">
         <table
           class="w-full text-left border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden"
@@ -148,9 +134,7 @@ const filteredCalls = computed(() => {
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
-                      <path
-                        d="M5 12l5-5 5 5H5z"
-                      />
+                      <path d="M5 12l5-5 5 5H5z" />
                     </svg>
                     <svg
                       v-else
@@ -158,9 +142,7 @@ const filteredCalls = computed(() => {
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
-                      <path
-                        d="M5 12l5-5 5 5H5z"
-                      />
+                      <path d="M5 12l5-5 5 5H5z" />
                     </svg>
                     <svg
                       v-if="sortColumn === col.key && sortOrder === 'desc'"
@@ -168,9 +150,7 @@ const filteredCalls = computed(() => {
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
-                      <path
-                        d="M5 8l5 5 5-5H5z"
-                      />
+                      <path d="M5 8l5 5 5-5H5z" />
                     </svg>
                     <svg
                       v-else
@@ -178,9 +158,7 @@ const filteredCalls = computed(() => {
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
-                      <path
-                        d="M5 8l5 5 5-5H5z"
-                      />
+                      <path d="M5 8l5 5 5-5H5z" />
                     </svg>
                   </div>
                 </div>
@@ -225,4 +203,3 @@ const filteredCalls = computed(() => {
     </div>
   </section>
 </template>
-

@@ -1,8 +1,8 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import AddBreakType from '../components/breaks/AddBreakType.vue';
 
-// -- Page State --
+// --- Page State ---
 const isAddBreakModalOpen = ref(false);
 
 // Dummy break type data
@@ -47,14 +47,13 @@ const selectAll = computed({
 // State for individual actions dropdowns in the table
 const activeActionsMenu = ref(null);
 
-// Functions
+// --- Functions ---
 const openAddBreakModal = () => {
   isAddBreakModalOpen.value = true;
 };
 
 const handleSaveBreak = (newBreak) => {
   console.log('New break to be saved:', newBreak);
-  // For demonstration, we'll just add it to the local array
   const newId =
     breakData.value.length > 0
       ? Math.max(...breakData.value.map((b) => b.id)) + 1
@@ -102,7 +101,6 @@ const vClickOutside = {
     <section
       class="max-w-[1700px] mx-auto mt-10 rounded-xl shadow-outer dark:bg-darkPurple bg-[rgba(90,169,230,.35)] border dark:border-lightBlue border-clientPurple px-8 py-4 transition-all duration-300 ease"
     >
-      <!-- Top Section -->
       <div class="flex justify-end flex-wrap items-center mb-6">
         <button
           @click="openAddBreakModal"
@@ -112,7 +110,6 @@ const vClickOutside = {
         </button>
       </div>
 
-      <!-- Break Type Table -->
       <div class="p-4 bg-white dark:bg-gray-900 rounded-xl shadow-md">
         <div class="overflow-x-auto">
           <table
@@ -173,7 +170,6 @@ const vClickOutside = {
                       </svg>
                     </button>
 
-                    <!-- Actions Dropdown Menu -->
                     <div
                       v-if="activeActionsMenu === breakType.id"
                       class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-20 ring-1 ring-black ring-opacity-5"
@@ -203,14 +199,9 @@ const vClickOutside = {
     </section>
   </main>
 
-  <!-- The new Add Break Modal -->
   <AddBreakType
     :isOpen="isAddBreakModalOpen"
     @close="isAddBreakModalOpen = false"
     @save="handleSaveBreak"
   />
 </template>
-
-<style scoped>
-/* Scoped styles can go here if needed */
-</style>

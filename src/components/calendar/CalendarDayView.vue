@@ -1,25 +1,21 @@
 <script setup>
 import { ref, computed } from 'vue';
 
-const { selectedDate, getEventsByHalfAnHour, getOutOfRangeEvents } = defineProps({
+// --- Props & Emits ---
+const props = defineProps({
   selectedDate: String,
   getEventsByHalfAnHour: Object,
   getOutOfRangeEvents: Array
 });
 
+// --- State Management ---
 const hoverTitle = ref(null);
 
-const hoveredEvents = computed(() => {
-  if (!hoverTitle.value) return [];
-  return allEvents.value.filter(event => event.title === hoverTitle.value);
-});
-
-// Flatten all events for the selected day
+// --- Computed Properties ---
 const allEvents = computed(() => {
-  return Object.values(getEventsByHalfAnHour).flat();
+  return Object.values(props.getEventsByHalfAnHour).flat().concat(props.getOutOfRangeEvents);
 });
 
-// Group and count events by title
 const eventSummary = computed(() => {
   const summaryMap = {};
   allEvents.value.forEach(event => {
@@ -36,6 +32,11 @@ const eventSummary = computed(() => {
     textColor: info.textColor
   }));
 });
+
+const hoveredEvents = computed(() => {
+  if (!hoverTitle.value) return [];
+  return allEvents.value.filter(event => event.title === hoverTitle.value);
+});
 </script>
 
 <template>
@@ -43,11 +44,12 @@ const eventSummary = computed(() => {
     <h3 class="text-lg font-semibold mb-4 dark:text-white text-gray-800">
       Events for {{ selectedDate }}
     </h3>
+
     <div v-if="eventSummary.length" class="mb-6 flex flex-wrap gap-2">
       <div
         v-for="summary in eventSummary"
         :key="summary.title"
-        class="px-3 py-1 rounded-md text-xs font-semibold flex items-center relative"
+        class="px-3 py-1 rounded-md text-md font-semibold flex items-center relative"
         :style="{ backgroundColor: summary.bgColor, color: summary.textColor }"
         @mouseenter="hoverTitle = summary.title"
         @mouseleave="hoverTitle = null"
@@ -101,6 +103,5 @@ const eventSummary = computed(() => {
         </div>
       </div>
     </div>
-
   </div>
 </template>

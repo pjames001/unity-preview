@@ -60,7 +60,7 @@ import { RouterLink } from 'vue-router';
         class="text-center text-4xl dark:bg-darkBlue bg-lightBlue dark:text-lightBlue text-gray-200 py-4 px-8 rounded-lg border dark:border-lightBlue border-blue-700 shadow-outer font-medium">
         Dummy Lead</h1>
       <span class="dark:text-gray-200 text-gray-700 text-sm py-2 px-4 ">0 Years 21 Days</span>
-      <span class="dark:text-gray-200 text-gray-700 text-sm"><span class="dark:text-white text-gray-800 font-semibold">Account Number:</span> L-20250709-0003</span>
+      <span class="dark:text-gray-200 text-gray-700 text-lg"><span class="dark:text-white text-gray-800 font-semibold">Account Number:</span> L-20250709-0003</span>
 
       <div class="flex items-center gap-2 my-4">
         <v-icon name="md-keyboarddoublearrowleft-round" scale="1.6" title="Last"

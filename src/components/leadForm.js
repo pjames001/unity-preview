@@ -558,7 +558,7 @@ export const leadsSteps = [
     title: 'Additional Info',
     fields: [
       {
-        key: 'natureOfAccount', label: 'Nature Of Account', type: 'select', placeholder: '', required: false, options: [
+        key: 'commercialOrConsumer', label: 'Commercial/Consumer', type: 'select', placeholder: '', required: true, options: [
           { label: 'Commercial', value: 'commercial' },
           { label: 'Consumer', value: 'consumer' },
           { label: 'Both', value: 'both' },
@@ -582,10 +582,10 @@ export const leadsSteps = [
       { key: 'interest', label: 'Interest', type: 'dual-number', placeholder: '100', required: true },
       { key: 'lateFees', label: 'Late Fees', type: 'dual-number', placeholder: '100', required: true },
       {
-        key: 'cardConvenienceFee', label: 'Card Convenience Fee', type: 'radio', options: [
+        key: 'cardConvenienceFee', label: 'Card Convenience Fee', type: 'radio',  options: [
+          { label: 'Agency', value: 'agency' },
           { label: 'Debtor', value: 'debtor' },
           { label: 'Client', value: 'client' },
-          { label: 'Agency', value: 'agency' }
         ]
       },
       { key: 'nextFollowUp', label: 'Next Follow Up', type: 'datetime-local', placeholder: '', required: false },
