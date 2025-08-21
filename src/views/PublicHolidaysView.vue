@@ -152,7 +152,7 @@ const vClickOutside = {
           <div class="relative w-full sm:w-auto">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Year</label>
             <select v-model="selectedYear"
-              class="mt-1 px-3 py-2 block w-full rounded-md border border-gray-400 dark:border-gray-600 shadow-sm dark:bg-gray-800 bg-white dark:text-white text-gray-700 outline-none">
+              class="mt-1 px-3 py-2 block w-full rounded-md border border-gray-400 dark:border-gray-600 shadow-inner dark:bg-gray-800 bg-white dark:text-white text-gray-700 outline-none">
               <option v-for="year in 5" :key="year" :value="new Date().getFullYear() + (year - 3)">
                 {{ new Date().getFullYear() + (year - 3) }}
               </option>
@@ -162,7 +162,7 @@ const vClickOutside = {
           <div class="relative w-full sm:w-auto">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Month</label>
             <select v-model="selectedMonth"
-              class="mt-1 px-3 py-2 block w-full rounded-md border border-gray-400 dark:border-gray-600 shadow-sm dark:bg-gray-800 bg-white dark:text-white text-gray-700 outline-none">
+              class="mt-1 px-3 py-2 block w-full rounded-md border border-gray-400 dark:border-gray-600 shadow-inner dark:bg-gray-800 bg-white dark:text-white text-gray-700 outline-none">
               <option :value="null">All Months</option>
               <option v-for="month in months" :key="month" :value="month">
                 {{ month }}
@@ -173,7 +173,7 @@ const vClickOutside = {
           <div class="relative w-full sm:w-auto min-w-48" v-click-outside="() => (openLocationMenu = false)">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Office Location</label>
             <button @click="openLocationMenu = !openLocationMenu"
-              class="mt-1 w-full text-left px-3 py-2 bg-white dark:bg-gray-800 border border-gray-400 dark:border-gray-600 dark:text-white text-gray-700 rounded-md shadow-sm">
+              class="mt-1 w-full text-left px-3 py-2 bg-white dark:bg-gray-800 border border-gray-400 dark:border-gray-600 dark:text-white text-gray-700 rounded-md shadow-inner">
               {{ selectedOfficeLocations.length ? selectedOfficeLocations.join(', ') : 'Select Locations' }}
             </button>
             <div v-if="openLocationMenu"
@@ -195,7 +195,7 @@ const vClickOutside = {
           <div class="relative w-full sm:w-auto">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Holiday Type</label>
             <select v-model="selectedHolidayType"
-              class="mt-1 px-3 py-2 block w-full rounded-md border border-gray-400 dark:border-gray-600 shadow-sm dark:bg-gray-800 bg-white dark:text-white text-gray-700 outline-none">
+              class="mt-1 px-3 py-2 block w-full rounded-md border border-gray-400 dark:border-gray-600 shadow-inner dark:bg-gray-800 bg-white dark:text-white text-gray-700 outline-none">
               <option :value="null">All Types</option>
               <option v-for="type in holidayTypes" :key="type" :value="type">
                 {{ type }}
@@ -206,7 +206,7 @@ const vClickOutside = {
           <div class="relative w-full sm:w-auto flex-grow">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Search</label>
             <input type="text" v-model="searchQuery" placeholder="Search by name"
-              class="mt-1 px-3 py-2 block w-full rounded-md border border-gray-400 dark:border-gray-600 shadow-sm dark:bg-gray-800 dark:text-white outline-none" />
+              class="mt-1 px-3 py-2 block w-full rounded-md border border-gray-400 dark:border-gray-600 shadow-inner dark:bg-gray-800 dark:text-white outline-none" />
           </div>
 
           <div class="flex-shrink-0 w-full sm:w-auto">
@@ -222,13 +222,13 @@ const vClickOutside = {
         
         <div class="flex justify-end gap-2 mb-4">
           <button @click="toggleView('table')"
-            :class="{ 'bg-blue-600 text-white': isTableView, 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200': !isTableView }"
-            class="px-4 py-2 rounded-xl font-bold shadow-md transition-colors duration-200">
+            :class="{ 'dark:bg-darkBlue bg-lightBlue border border-blue-700 text-white shadow-inner': isTableView, 'bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-outer': !isTableView }"
+            class="px-4 py-2 rounded-xl font-bold transition-colors duration-200">
             Table View
           </button>
           <button @click="toggleView('calendar')"
-            :class="{ 'bg-blue-600 text-white': !isTableView, 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200': isTableView }"
-            class="px-4 py-2 rounded-xl font-bold shadow-md transition-colors duration-200">
+            :class="{ 'dark:bg-darkBlue bg-lightBlue border border-blue-700 text-white shadow-inner': !isTableView, 'bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-outer': isTableView }"
+            class="px-4 py-2 rounded-xl font-bold transition-colors duration-200">
             Calendar View
           </button>
         </div>

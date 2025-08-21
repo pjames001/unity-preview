@@ -194,7 +194,7 @@ const saveNewPreset = () => {
         <div>
           <button
             @click="showOnlyImportant = !showOnlyImportant"
-            class="px-4 py-2 mr-4 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700"
+            class="px-4 py-2 mr-4 dark:bg-slate-900 bg-lightBlue border dark:border-lightBlue border-blue-700 dark:text-lightBlue text-white font-semibold rounded shadow-outer"
           >
             Important Notes
           </button>

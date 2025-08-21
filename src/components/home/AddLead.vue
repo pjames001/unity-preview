@@ -1,3 +1,159 @@
+<script setup>
+import { ref, watch, defineProps, defineEmits, computed, reactive } from 'vue';
+import { leadsSteps, clientsSteps } from '../../stores/leadForm';
+
+const props = defineProps({
+  isOpen: Boolean,
+  mode: String // 'lead' or 'client'
+});
+
+const emit = defineEmits(['close', 'submit']);
+
+const currentEntityType = ref('leads');
+const step = ref(1);
+
+const isPhoneField = (key) => ['leadsCompanyPhoneNumber', 'leadsContactPhoneNumber', 'leadsContactMobileNumber', 'clientCompanyPhoneNumber', 'leadPhone'].includes(key);
+
+const onPhoneInput = (e, key) => {
+  const raw = (e.target).value;
+  const digits = raw.replace(/\D/g, '');
+
+  const limitedDigits = digits.startsWith('1') ? digits.slice(0, 11) : '1' + digits.slice(0, 10);
+
+  form[currentEntityType.value][key] = '+1' + limitedDigits.slice(1); // Save as "+1XXXXXXXXXX"
+}
+
+const formattedPhone = (value) => {
+  const digits = value?.replace(/\D/g, '') || '';
+
+  if (!digits.startsWith('1')) return '+1 ';
+  const clean = digits.slice(1, 11); // Max 10 digits after '1'
+
+  let result = '+1';
+  if (clean.length >= 1) result += ' ' + clean.slice(0, 3);
+  if (clean.length >= 4) result += '-' + clean.slice(3, 6);
+  if (clean.length >= 7) result += '-' + clean.slice(6, 10);
+  return result;
+}
+
+const onExtensionInput = (e, key ) => {
+  const val = (e.target).value.replace(/\D/g, '').slice(0, 3);
+  form[currentEntityType.value][key + '_ext'] = val;
+}
+
+
+const form = reactive({
+  leads: {},
+  clients: {}
+})
+
+
+
+//to prevent the user from moving forward to the next step until he fills everything required in the current leadsForm
+const validateStep = () => {
+  const currentSteps = steps.value;
+  const currentForm = form[currentEntityType.value];
+
+  const currentFields = currentSteps[step.value - 1].fields;
+  for (const field of currentFields) {
+    if (field.required) {
+      const value = currentForm[field.key];
+      if (
+        value === '' ||
+        value === null ||
+        value === undefined ||
+        (field.type === 'dual-number' && (!value.client || !value.agency)) ||
+        (field.type === 'select' && value === '')
+      ) {
+        return false;
+      }
+    }
+  }
+  return true;
+};
+
+const initFormFields = (entityType, stepData) => {
+  form[entityType] = {
+    ...form[entityType],
+    status: '',
+    substatus: '',
+    opener: '',
+    closer: ''
+  };
+
+  stepData.forEach(step =>
+    step.fields.forEach(field => {
+      if (field.type === 'dual-number') {
+        form[entityType][field.key] = { client: '', agency: '' };
+      } else {
+        form[entityType][field.key] = '';
+      }
+    })
+  );
+};
+
+
+
+const nextStep = () => {
+  console.log(JSON.parse(JSON.stringify(form[currentEntityType.value])));
+
+  if (!validateStep()) {
+    alert('Please complete all required fields before continuing.');
+    return;
+  }
+  step.value++;
+};
+
+//to switch between clients and leads
+const steps = computed(() =>
+  currentEntityType.value === 'clients' ? clientsSteps : leadsSteps
+);
+
+watch(
+  () => props.mode,
+  (newMode) => {
+    currentEntityType.value = newMode === 'client' ? 'clients' : 'leads';
+  },
+  { immediate: true }
+);
+
+watch(
+  () => props.isOpen,
+  (open) => {
+    if (open) {
+      step.value = 1;
+      const type = currentEntityType.value;
+      const stepData = steps.value;
+      initFormFields(type, stepData);
+
+      const formKey = currentEntityType.value;
+      const currentSteps = steps.value;
+
+      form[formKey] = {};
+
+      currentSteps.forEach((s) =>
+        s.fields.forEach((f) => {
+          if (f.type === 'dual-number') {
+            form[formKey][f.key] = { client: '', agency: '' };
+          } else {
+            form[formKey][f.key] = '';
+          }
+        })
+      );
+    }
+  }
+);
+
+
+const close = () => emit('close');
+
+const submit = () => {
+  emit('submit', form[currentEntityType.value]);
+  emit('close');
+};
+
+</script>
+
 <template>
   <Transition name="leads-fade" mode="out-in">
     <div v-if="isOpen" class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50">
@@ -206,163 +362,7 @@
   </Transition>
 </template>
 
-<script setup>
-import { ref, watch, defineProps, defineEmits, computed, reactive } from 'vue';
-import { leadsSteps, clientsSteps } from '../leadForm';
 
-const props = defineProps({
-  isOpen: Boolean,
-  mode: String // 'lead' or 'client'
-});
-
-const emit = defineEmits(['close', 'submit']);
-
-const currentEntityType = ref('leads');
-const step = ref(1);
-
-const isPhoneField = (key) => ['leadsCompanyPhoneNumber', 'leadsContactPhoneNumber', 'leadsContactMobileNumber', 'clientCompanyPhoneNumber', 'leadPhone'].includes(key);
-
-const onPhoneInput = (e, key) => {
-  const raw = (e.target).value;
-  const digits = raw.replace(/\D/g, '');
-
-  const limitedDigits = digits.startsWith('1') ? digits.slice(0, 11) : '1' + digits.slice(0, 10);
-
-  form[currentEntityType.value][key] = '+1' + limitedDigits.slice(1); // Save as "+1XXXXXXXXXX"
-}
-
-const formattedPhone = (value) => {
-  const digits = value?.replace(/\D/g, '') || '';
-
-  if (!digits.startsWith('1')) return '+1 ';
-  const clean = digits.slice(1, 11); // Max 10 digits after '1'
-
-  let result = '+1';
-  if (clean.length >= 1) result += ' ' + clean.slice(0, 3);
-  if (clean.length >= 4) result += '-' + clean.slice(3, 6);
-  if (clean.length >= 7) result += '-' + clean.slice(6, 10);
-  return result;
-}
-
-const onExtensionInput = (e, key ) => {
-  const val = (e.target).value.replace(/\D/g, '').slice(0, 3);
-  form[currentEntityType.value][key + '_ext'] = val;
-}
-
-
-const form = reactive({
-  leads: {},
-  clients: {}
-})
-
-
-
-//to prevent the user from moving forward to the next step until he fills everything required in the current leadsForm
-const validateStep = () => {
-  const currentSteps = steps.value;
-  const currentForm = form[currentEntityType.value];
-
-  const currentFields = currentSteps[step.value - 1].fields;
-  for (const field of currentFields) {
-    if (field.required) {
-      const value = currentForm[field.key];
-      if (
-        value === '' ||
-        value === null ||
-        value === undefined ||
-        (field.type === 'dual-number' && (!value.client || !value.agency)) ||
-        (field.type === 'select' && value === '')
-      ) {
-        return false;
-      }
-    }
-  }
-  return true;
-};
-
-const initFormFields = (entityType, stepData) => {
-  form[entityType] = {
-    ...form[entityType],
-    status: '',
-    substatus: '',
-    opener: '',
-    closer: ''
-  };
-
-  stepData.forEach(step =>
-    step.fields.forEach(field => {
-      if (field.type === 'dual-number') {
-        form[entityType][field.key] = { client: '', agency: '' };
-      } else {
-        form[entityType][field.key] = '';
-      }
-    })
-  );
-};
-
-
-
-const nextStep = () => {
-  console.log(JSON.parse(JSON.stringify(form[currentEntityType.value])));
-
-  if (!validateStep()) {
-    alert('Please complete all required fields before continuing.');
-    return;
-  }
-  step.value++;
-};
-
-//to switch between clients and leads
-const steps = computed(() =>
-  currentEntityType.value === 'clients' ? clientsSteps : leadsSteps
-);
-
-watch(
-  () => props.mode,
-  (newMode) => {
-    currentEntityType.value = newMode === 'client' ? 'clients' : 'leads';
-  },
-  { immediate: true }
-);
-
-watch(
-  () => props.isOpen,
-  (open) => {
-    if (open) {
-      step.value = 1;
-      const type = currentEntityType.value;
-      const stepData = steps.value;
-      initFormFields(type, stepData);
-
-      const formKey = currentEntityType.value;
-      const currentSteps = steps.value;
-
-      form[formKey] = {};
-
-      currentSteps.forEach((s) =>
-        s.fields.forEach((f) => {
-          if (f.type === 'dual-number') {
-            form[formKey][f.key] = { client: '', agency: '' };
-          } else {
-            form[formKey][f.key] = '';
-          }
-        })
-      );
-    }
-  }
-);
-
-
-const close = () => emit('close');
-
-const submit = () => {
-  emit('submit', form[currentEntityType.value]);
-  emit('close');
-};
-
-
-
-</script>
 
 <style scoped>
 ::-webkit-scrollbar {

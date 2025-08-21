@@ -1,11 +1,11 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 
 // --- State ---
 const searchQuery = ref('');
 const sortColumn = ref('');
 const sortOrder = ref('asc');
-const openMenu = ref(null);
+const openMenuId = ref(null);
 const selectedIds = ref([]);
 
 const contacts = ref([
@@ -98,14 +98,6 @@ const isIndeterminate = computed(() => {
 
 const selectedCount = computed(() => selectedIds.value.length);
 
-// --- Watchers ---
-watch(isAllSelected, (newVal) => {
-  if (!newVal) {
-    // This watcher is no longer necessary as the logic is handled by the `toggleAllSelection` method.
-    // I've kept it as a comment to show it can be removed entirely.
-  }
-});
-
 // --- Methods ---
 const toggleSort = (column) => {
   if (sortColumn.value === column) {
@@ -117,7 +109,7 @@ const toggleSort = (column) => {
 };
 
 const toggleMenu = (id) => {
-  openMenu.value = openMenu.value === id ? null : id;
+  openMenuId.value = openMenuId.value === id ? null : id;
 };
 
 const toggleAllSelection = (event) => {
@@ -135,23 +127,8 @@ const deleteSelectedContacts = () => {
 
 const deleteSingleContact = (id) => {
   contacts.value = contacts.value.filter(c => c.id !== id);
-  openMenu.value = null;
+  openMenuId.value = null;
   selectedIds.value = selectedIds.value.filter(selectedId => selectedId !== id);
-};
-
-// --- Custom Directives ---
-const vClickOutside = {
-  mounted(el, binding) {
-    el.clickOutsideEvent = (event) => {
-      if (!(el === event.target || el.contains(event.target))) {
-        binding.value();
-      }
-    };
-    document.addEventListener('click', el.clickOutsideEvent);
-  },
-  unmounted(el) {
-    document.removeEventListener('click', el.clickOutsideEvent);
-  },
 };
 </script>
 
@@ -160,7 +137,7 @@ const vClickOutside = {
     <div class="p-4 bg-white dark:bg-gray-900 rounded-xl shadow-md">
       <div class="flex justify-between items-center mb-4">
         <div class="flex items-center space-x-2">
-          <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">Add Contact</button>
+          <button class="dark:bg-darkGreen bg-pigmentGreen border border-lightGreen dark:text-lightGreen text-white px-4 py-2 rounded-md text-sm shadow-outer">Add Contact</button>
           <button
             v-if="selectedCount > 0"
             @click="deleteSelectedContacts"
@@ -177,8 +154,8 @@ const vClickOutside = {
         />
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+      <div class="pb-20">
+        <table class="w-full text-left border border-gray-300 dark:border-gray-600 rounded-md">
           <thead class="bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200">
             <tr>
               <th class="px-4 py-2">
@@ -224,12 +201,16 @@ const vClickOutside = {
               <td class="px-4 py-2">{{ contact.phone }}</td>
               <td class="px-4 py-2">{{ contact.address }}</td>
               <td class="px-4 py-2">{{ contact.state }}</td>
-              <td class="px-4 py-2 text-center relative" v-click-outside="() => (openMenu = null)">
-                <button @click="toggleMenu(contact.id)" aria-haspopup="true" :aria-expanded="openMenu === contact.id">
+              <td class="px-4 py-2 text-center relative">
+                <button
+                  @click.stop="toggleMenu(contact.id)"
+                  aria-haspopup="true"
+                  :aria-expanded="openMenuId === contact.id"
+                >
                   <v-icon name="bi-three-dots-vertical" class="w-5 h-5 text-gray-500 hover:text-gray-800 dark:hover:text-white" />
                 </button>
                 <div
-                  v-if="openMenu === contact.id"
+                  v-if="openMenuId === contact.id"
                   class="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg rounded-md z-10 origin-top-right"
                 >
                   <ul class="text-sm text-gray-700 dark:text-gray-200">

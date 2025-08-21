@@ -34,19 +34,19 @@ const newEventData = ref({
   note: '',
 });
 const events = ref([
-  { id: 1, date: '2025-07-03T09:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 2, date: '2025-07-03T14:30:00', title: 'Call Back', color: 'teal' },
-  { id: 3, date: '2025-07-10T07:00:00', title: 'Call Back', color: 'teal' },
-  { id: 4, date: '2025-07-05T11:00:00', title: 'Follow Up on SA', color: 'purple' },
-  { id: 5, date: '2025-07-05T15:00:00', title: 'Send SA', color: 'yellow' },
-  { id: 6, date: '2025-07-15T10:00:00', title: 'Follow Up on SA', color: 'purple' },
-  { id: 7, date: '2025-07-20T16:00:00', title: 'Send SA', color: 'yellow' },
-  { id: 8, date: '2025-07-25T08:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 9, date: '2025-07-03T08:00:00', title: 'Call Back', color: 'teal' },
-  { id: 10, date: '2025-07-03T11:00:00', title: 'Call Back', color: 'teal' },
-  { id: 11, date: '2025-07-03T13:00:00', title: 'Follow Up on SA', color: 'purple' },
-  { id: 12, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
-  { id: 13, date: '2025-07-03T17:00:00', title: 'Team Meeting', color: 'red' },
+  { id: 1, date: '2025-07-03T09:00:00', title: 'Team Meeting', note: 'some test note', color: 'red' },
+  { id: 2, date: '2025-07-03T14:30:00', title: 'Call Back', note: 'some test note', color: 'teal' },
+  { id: 3, date: '2025-07-10T07:00:00', title: 'Call Back', note: 'some test note', color: 'teal' },
+  { id: 4, date: '2025-07-05T11:00:00', title: 'Follow Up on SA', note: 'some test note', color: 'purple' },
+  { id: 5, date: '2025-07-05T15:00:00', title: 'Send SA', note: 'some test note', color: 'yellow' },
+  { id: 6, date: '2025-07-15T10:00:00', title: 'Follow Up on SA', note: 'some test note', link: 'leads/0', color: 'purple' },
+  { id: 7, date: '2025-07-20T16:00:00', title: 'Send SA', note: 'some test note', color: 'yellow' },
+  { id: 8, date: '2025-07-25T08:00:00', title: 'Team Meeting', note: 'some test note', color: 'red' },
+  { id: 9, date: '2025-07-03T08:00:00', title: 'Call Back', note: 'some test note', color: 'teal' },
+  { id: 10, date: '2025-07-03T11:00:00', title: 'Call Back', note: 'some test note', color: 'teal' },
+  { id: 11, date: '2025-07-03T13:00:00', title: 'Follow Up on SA', note: 'some test note', color: 'purple' },
+  { id: 12, date: '2025-07-03T17:00:00', title: 'Team Meeting', note: 'some test note', color: 'red' },
+  { id: 13, date: '2025-07-03T17:00:00', title: 'Team Meeting', note: 'some test note', color: 'red' },
 ]);
 const allDepartments = [
   { id: 1, name: 'Legal' }, { id: 2, name: 'IT' }, { id: 3, name: 'Collections' },
@@ -345,6 +345,7 @@ onUnmounted(() => {
             :getOutOfRangeEvents="getOutOfRangeEvents"
             :getWeekDays="getWeekDays"
             @day-click="handleDayClick"
+            @add-event="() => { isAddEventModalOpen = true; isDayModalOpen = false; }"
           />
         </Transition>
 

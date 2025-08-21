@@ -1,6 +1,8 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useLeadsStore } from '@/stores/leadsStore';
+import { VueSpinnerPie } from 'vue3-spinners'
 import PivotHighchartsPyramid from '@/components/home/PivotHighchartsPyramid.vue';
 import RoundedChart from '@/components/home/RoundedChart.vue';
 import Metric from '@/components/home/Metric.vue';
@@ -10,24 +12,25 @@ import TableLayoutCustomizer from '@/components/TableLayoutCustomizer.vue';
 import AddLead from '@/components/home/AddLead.vue';
 
 const router = useRouter();
+const { leads, isLoading, isError, error } = useLeadsStore();
 
-// Modals and State
+// --- Modals and State ---
 const isUploadModalOpen = ref(false);
 const uploadMode = ref('lead');
 const isAddModalOpen = ref(false);
 const addMode = ref('lead');
 const isFilterOpen = ref(false);
-const isCustomizeLayoutOpen = ref(false);
 const isModalOpen = ref(false);
+const searchQuery = ref('');
 
-// View and Selections
+// --- View and Selections ---
 const currentView = ref('leads');
 const selectedLeads = ref([]);
 const selectedClients = ref([]);
 const leadActionsDropdown = ref(null);
 const clientActionsDropdown = ref(null);
 
-// Table Data
+// --- Table Data ---
 const allLeadsColumns = [
   'Company Name', 'Phone Number', 'Email', 'Lead Status', 'Sub Status', 'Opener', 'Closer', 'Account Number',
   'Medical', 'Zip Code', 'Business Type', 'Batch Number', 'Account Type', 'Address', 'Address 2',
@@ -46,14 +49,32 @@ const allClientsColumns = [
 ];
 const currentClientsColumns = ref(['Client Name', 'Industry', 'Contact', 'Status', 'Actions']);
 
-// Helper Functions
+// --- Computed Properties ---
+const filteredLeads = computed(() => {
+  if (!leads.value) return [];
+  if (!searchQuery.value) {
+    return leads.value;
+  }
+  const query = searchQuery.value.toLowerCase();
+  return leads.value.filter(lead => {
+    return Object.values(lead).some(value =>
+      String(value).toLowerCase().includes(query)
+    );
+  });
+});
+
+const isAllLeadsSelected = computed(() => {
+  return selectedLeads.value.length === filteredLeads.value.length && filteredLeads.value.length > 0;
+});
+
+// --- Helper Functions ---
 const toggleUploadModal = (mode) => {
   uploadMode.value = mode;
   isUploadModalOpen.value = !isUploadModalOpen.value;
 };
 
-const toggleAddModal = (mode) => {
-  addMode.value = mode;
+const toggleAddModal = (view) => {
+  addMode.value = view === 'leads' ? 'lead' : 'client';
   isAddModalOpen.value = !isAddModalOpen.value;
 };
 
@@ -67,20 +88,20 @@ const handleSaveClientsLayout = (newLayout) => {
   isModalOpen.value = false;
 };
 
-const toggleCheckbox = (list, index) => {
-  const i = list.value.indexOf(index);
-  if (i > -1) {
-    list.value.splice(i, 1);
+const toggleCheckbox = (id) => {
+  const index = selectedLeads.value.indexOf(id);
+  if (index > -1) {
+    selectedLeads.value.splice(index, 1);
   } else {
-    list.value.push(index);
+    selectedLeads.value.push(id);
   }
 };
 
-const toggleSelectAll = (list, count) => {
-  if (list.value.length === count) {
-    list.value = [];
+const toggleSelectAll = () => {
+  if (isAllLeadsSelected.value) {
+    selectedLeads.value = [];
   } else {
-    list.value = Array.from({ length: count }, (_, i) => i);
+    selectedLeads.value = filteredLeads.value.map(lead => lead.uuid);
   }
 };
 
@@ -116,6 +137,14 @@ const goToClientPage = (id) => router.push(`/clients/${id}`);
 </script>
 
 <template>
+  <div v-if="isLoading" class="dark:bg-black/40 bg-black/70 flex justify-center items-center w-full h-screen">
+    <div class="text-black text-9xl">
+      <VueSpinnerPie size="130" color="#4DAA57" />
+    </div>
+  </div>
+  <div v-else-if="isError" class="flex justify-center items-center h-screen">
+    <div class="text-red-500 text-2xl">Error: {{ error.message }}</div>
+  </div>
   <main class="view dark:bg-darkBlue bg-white">
     <section class="flex justify-center items-center max-w-[1600px] mx-auto mt-10 rounded-xl shadow-outer dark:bg-darkPurple bg-[rgba(90,169,230,.35)] border dark:border-lightBlue border-clientPurple px-8 py-4 transition-all duration-300 ease">
       <Metric />
@@ -125,7 +154,7 @@ const goToClientPage = (id) => router.push(`/clients/${id}`);
       <div class="flex justify-between items-center flex-wrap gap-4 mb-6">
         <div class="flex items-center gap-4 flex-wrap">
           <span class="dark:text-white text-gray-800 text-lg font-semibold">
-            Showing {{ currentView === 'leads' ? '150 Leads' : '42 Clients' }}
+            Showing {{ currentView === 'leads' ? leads.length : '42 Clients' }}
           </span>
 
           <button @click="toggleUploadModal(currentView)" class="flex items-center dark:bg-darkBlue bg-lightBlue border dark:border-lightBlue border-blue-700 dark:text-lightBlue text-white font-bold px-4 py-2 rounded-xl shadow-outer hover:scale-105 transition-all">
@@ -133,7 +162,7 @@ const goToClientPage = (id) => router.push(`/clients/${id}`);
             <v-icon name="bi-upload" scale="1.5" class="ml-2" />
           </button>
 
-          <button @click="toggleAddModal(currentView)" class="flex items-center dark:bg-darkGreen bg-pigmentGreen border dark:border-lightGreen border-lightGreen dark:text-lightGreen text-white font-bold px-4 py-2 rounded-xl shadow-outer hover:scale-105 transition-all">
+          <button @click="toggleAddModal(currentView)" class="flex items-center dark:bg-darkGreen bg-pigmentGreen border border-lightGreen dark:text-lightGreen text-white font-bold px-4 py-2 rounded-xl shadow-outer hover:scale-105 transition-all">
             Add {{ currentView === 'leads' ? 'Lead' : 'Client' }}
             <v-icon name="bi-plus-lg" scale="1.5" class="ml-2" />
           </button>
@@ -143,7 +172,7 @@ const goToClientPage = (id) => router.push(`/clients/${id}`);
             class="text-white flex items-center gap-2 dark:bg-darkBrown bg-warmYellow/80 py-2 px-4 rounded-xl border border-darkOrange shadow-outer hover:scale-105 transition-all"
           >
             <span class="font-bold text-lg dark:text-darkOrange text-white">Filters</span>
-            <v-icon name="bi-filter" scale="1.8" class="dark:text-darkOrange text-white" />
+            <v-icon name="bi-filter" scale="1.5" class="dark:text-darkOrange text-white" />
           </button>
         </div>
 
@@ -168,6 +197,7 @@ const goToClientPage = (id) => router.push(`/clients/${id}`);
               type="text"
               placeholder="Search..."
               class="p-[10px] border-t-2 border-b-2 border-r-2 rounded-br-xl rounded-tr-xl border-newPurple shadow-inner outline-none"
+              v-model="searchQuery"
             />
           </div>
 
@@ -175,10 +205,10 @@ const goToClientPage = (id) => router.push(`/clients/${id}`);
             <button
               @click="switchToLeads"
               :class="[
-                'px-4 py-2 rounded-xl font-bold shadow-outer transition-all',
+                'px-4 py-2 rounded-xl dark:bg-darkBlue bg-lightBlue border dark:border-lightBlue border-blue-700 dark:text-lightBlue text-white font-bold transition-all',
                 currentView === 'leads'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white dark:bg-darkBlue text-gray-800 dark:text-white border border-gray-400'
+                  ? 'shadow-inner dark:bg-gray-700'
+                  : 'shadow-outer dark:bg-darkBlue bg-lightBlue'
               ]"
             >
               Leads
@@ -186,10 +216,10 @@ const goToClientPage = (id) => router.push(`/clients/${id}`);
             <button
               @click="switchToClients"
               :class="[
-                'px-4 py-2 rounded-xl font-bold shadow-outer transition-all',
+                'px-4 py-2 rounded-xl dark:bg-darkBlue bg-lightBlue border dark:border-lightBlue border-blue-700 dark:text-lightBlue text-white font-bold transition-all',
                 currentView === 'clients'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white dark:bg-darkBlue text-gray-800 dark:text-white border border-gray-400'
+                  ? 'shadow-inner dark:bg-gray-700'
+                  : 'shadow-outer dark:bg-darkBlue bg-lightBlue'
               ]"
             >
               Clients
@@ -206,7 +236,7 @@ const goToClientPage = (id) => router.push(`/clients/${id}`);
                 <input
                   type="checkbox"
                   :checked="selectedLeads.length === 3"
-                  @change="toggleSelectAll(selectedLeads, 3)"
+                  @change="toggleSelectAll(selectedLeads, filteredLeads.length)"
                 />
               </th>
               <th v-for="column in currentLeadsColumns" :key="column">{{ column }}</th>
@@ -215,21 +245,25 @@ const goToClientPage = (id) => router.push(`/clients/${id}`);
           <tbody class="dark:bg-darkBlue bg-white dark:text-white text-gray-800">
             <tr
               class="text-center h-16 border-b border-gray-400 cursor-pointer dark:hover:bg-gray-800 hover:bg-gray-300 transition duration-300 ease"
-              @click="goToLeadPage(index)"
-              v-for="(lead, index) in 3"
-              :key="index"
+              @click="goToLeadPage(lead.uuid)"
+              v-for="(lead, index) in filteredLeads"
+              :key="lead.uuid"
             >
               <td @click.stop>
                 <input
                   type="checkbox"
-                  :checked="selectedLeads.includes(index)"
-                  @change="toggleCheckbox(selectedLeads, index)"
+                  :checked="selectedLeads.includes(lead.uuid)"
+                  @change="toggleCheckbox(selectedLeads, lead.uuid)"
                 />
               </td>
-              <td><span class="py-2 px-4 text-white rounded-full bg-blue-800">Cold Lead</span></td>
-              <td><span class="py-2 px-4 text-white rounded-full bg-gray-500">Not Interested</span></td>
-              <td>United Legal Group</td>
-              <td>Tania Miller</td>
+              <td><span class="py-2 px-4 dark:text-white text-gray-700 font-medium">{{ lead.name }}</span></td>
+              <td>
+                <span class="py-2 px-4 text-white rounded-full " :style="{ backgroundColor: lead.status ? lead.status.color : '#9CA3AF' }">
+                  {{ lead.status ? lead.status.name : 'No Status' }}
+                </span>
+              </td>
+              <td>{{ leads.substatus ? lead.substatus : 'No Substatus' }}</td>
+              <td>{{ lead.closer == '' ? 'No Closer Yet' : lead.closer }}</td>
               <td class="relative">
                 <v-icon
                   name="bi-three-dots-vertical"

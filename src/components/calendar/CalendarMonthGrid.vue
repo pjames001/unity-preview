@@ -27,7 +27,7 @@ const handleDayClick = (day) => {
           'min-h-[120px] dark:bg-darkPurple bg-white p-2 rounded-md relative cursor-pointer transition-all duration-200 ease-in-out',
           { 'dark:text-gray-600 shadow-none text-gray-400': !day.isCurrentMonth },
           { 'font-bold shadow-outer hover:scale-[1.03]': !day.isToday && day.isCurrentMonth },
-          { 'font-bold shadow-inner border border-blue-500': day.isToday },
+          { 'font-bold text-[30px] shadow-inner border border-blue-500': day.isToday },
           { 'border border-blue-500 text-green-600': day.isSelected },
           { 'rounded-tl-lg': day.isFirstDayOfWeek && day.isFirstRow },
           { 'rounded-tr-lg': day.isLastDayOfWeek && day.isFirstRow },
@@ -40,7 +40,7 @@ const handleDayClick = (day) => {
           :class="[
             'text-right text-sm font-medium',
             {
-              'text-[#fcba03] text-[30px]': day.isToday,
+              'text-[#fcba03] text-xl': day.isToday,
               'dark:text-white text-gray-800': day.isCurrentMonth && !day.isToday,
               'text-gray-400 dark:text-gray-600': !day.isCurrentMonth
             }

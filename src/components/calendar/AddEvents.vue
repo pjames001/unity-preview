@@ -84,7 +84,7 @@ const toggleSelectAll = (listType) => {
           <div>
             <label class="block text-sm font-medium mb-1">Event Type</label>
             <select :value="newEventData.type" @input="emit('update:newEventData', { ...newEventData, type: $event.target.value })"
-              class="p-2 border border-gray-400 rounded bg-white w-full dark:bg-darkBlue text-gray-700 dark:text-white outline-none"
+              class="p-2 border border-gray-400 rounded bg-white w-full dark:bg-darkBlue text-gray-700 dark:text-white outline-none shadow-inner"
               required>
               <option disabled value="">Select type</option>
               <option>Team Meeting</option>
@@ -94,20 +94,20 @@ const toggleSelectAll = (listType) => {
             </select>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium mb-1">Reminder Time</label>
-            <input :value="newEventData.time" @input="emit('update:newEventData', { ...newEventData, time: $event.target.value })" type="time"
-              class="p-2 border border-gray-400 rounded bg-white w-full dark:bg-darkBlue text-gray-700 dark:text-white outline-none"
-              required />
-          </div>
-
-          <div>
+          <div class="flex gap-2">
+            <div class="flex-1">
+              <label class="block text-sm font-medium mb-1">Reminder Time</label>
+              <input :value="newEventData.time" @input="emit('update:newEventData', { ...newEventData, time: $event.target.value })" type="time"
+                class="p-2 border border-gray-400 rounded bg-white w-full dark:bg-darkBlue text-gray-700 dark:text-white outline-none shadow-inner"
+                required />
+            </div>
+            <div>
             <label class="block text-sm font-medium mb-1">Pre-Reminder</label>
             <div class="flex gap-2">
               <input :value="newEventData.preReminderValue" @input="emit('update:newEventData', { ...newEventData, preReminderValue: $event.target.value })" type="number" min="0"
-                class="p-2 border border-gray-400 rounded bg-white w-1/2 dark:bg-darkBlue text-gray-700 dark:text-white outline-none" />
+                class="p-2 border border-gray-400 rounded bg-white w-1/2 dark:bg-darkBlue text-gray-700 dark:text-white outline-none shadow-inner" />
               <select :value="newEventData.preReminderUnit" @input="emit('update:newEventData', { ...newEventData, preReminderUnit: $event.target.value })"
-                class="w-1/2 p-2 border border-gray-400 rounded bg-white dark:bg-darkBlue text-gray-700 dark:text-white outline-none">
+                class="w-1/2 p-2 border border-gray-400 rounded bg-white dark:bg-darkBlue text-gray-700 dark:text-white outline-none shadow-inner">
                 <option value="minutes">Minutes</option>
                 <option value="hours">Hours</option>
                 <option value="days">Days</option>
@@ -115,16 +115,18 @@ const toggleSelectAll = (listType) => {
               </select>
             </div>
           </div>
+          </div>
+
+          
 
           <div>
             <label class="block text-sm font-medium mb-1">Frequency</label>
             <div class="flex justify-between items-center gap-6 mb-2">
               <select :value="newEventData.frequencyPattern" @input="emit('update:newEventData', { ...newEventData, frequencyPattern: $event.target.value })"
-                class="p-2 border border-gray-400 rounded bg-white w-full dark:bg-darkBlue text-gray-700 dark:text-white outline-none"
+                class="p-2 border border-gray-400 rounded bg-white w-full dark:bg-darkBlue text-gray-700 dark:text-white outline-none shadow-inner"
                 required>
                 <option value="doNotRepeat">Do Not Repeat</option>
                 <option value="every">Every</option>
-                <option value="everyDay">Every Day</option>
                 <option value="everyOther">Every Other</option>
                 <option value="everyWeekday">Every Weekday</option>
                 <option value="every1st">Every 1st</option>
@@ -135,12 +137,12 @@ const toggleSelectAll = (listType) => {
 
               <div v-if="newEventData.frequencyPattern !== 'doNotRepeat'" class="flex gap-2 mb-2">
                 <button @click="emit('update-frequency-mode', 'week')"
-                  :class="frequencyMode === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200'"
-                  class="px-2 py-1 rounded">Week</button>
+                  :class="frequencyMode === 'week' ? 'shadow-inner' : 'shadow-outer'"
+                  class="px-2 py-1 border dark:bg-darkBrown bg-warmYellow/70 border-darkOrange dark:text-darkOrange text-gray-800 rounded">Week</button>
 
                 <button @click="emit('update-frequency-mode', 'month')"
-                  :class="frequencyMode === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200'"
-                  class="px-2 py-1 rounded">Month</button>
+                  :class="frequencyMode === 'month' ? 'shadow-inner' : 'shadow-outer'"
+                  class="px-2 py-1 border dark:bg-darkBrown bg-warmYellow/70 border-darkOrange dark:text-darkOrange text-gray-800 rounded">Month</button>
               </div>
             </div>
 
@@ -155,7 +157,7 @@ const toggleSelectAll = (listType) => {
 
             <div v-else-if="frequencyMode === 'month' && newEventData.frequencyPattern !== 'doNotRepeat'" class="mt-2">
               <label class="block text-sm font-medium mb-1">Select Dates</label>
-              <input type="date" @change="addToFrequencyDates" class="border rounded p-2 dark:bg-darkBlue" />
+              <input type="date" @change="addToFrequencyDates" class="border border-gray-500 rounded p-2 dark:bg-darkBlue shadow-inner" />
               <div class="flex gap-2 mt-1 flex-wrap">
                 <span v-for="(date, i) in newEventData.frequencyDates" :key="i"
                   class="bg-gray-400 dark:bg-navBlue text-gray-700 dark:text-white px-2 py-1 rounded text-sm">
@@ -169,19 +171,19 @@ const toggleSelectAll = (listType) => {
           <div>
             <label class="block text-sm font-medium mb-1">Priority</label>
             <select :value="newEventData.priority" @input="emit('update:newEventData', { ...newEventData, priority: $event.target.value })"
-              class="p-2 border border-gray-400 rounded bg-white w-full dark:bg-darkBlue text-gray-700 dark:text-white outline-none"
+              class="p-2 border border-gray-400 rounded bg-white w-full dark:bg-darkBlue text-gray-700 dark:text-white outline-none shadow-inner"
               required>
               <option disabled value="">Select priority</option>
-              <option>Low</option>
-              <option>Medium</option>
               <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
             </select>
           </div>
 
           <div>
             <label class="block text-sm font-medium mb-1">Visibility</label>
             <select :value="newEventData.visibilityType" @input="emit('update:newEventData', { ...newEventData, visibilityType: $event.target.value, visibilityValue: [] })"
-              class="p-2 border border-gray-400 rounded bg-white w-full dark:bg-darkBlue text-gray-700 dark:text-white outline-none"
+              class="p-2 border border-gray-400 rounded bg-white w-full dark:bg-darkBlue text-gray-700 dark:text-white outline-none shadow-inner"
               required>
               <option>Only Me</option>
               <option>Department</option>
@@ -193,7 +195,7 @@ const toggleSelectAll = (listType) => {
             <template v-for="[listType, list] in Object.entries(dropdownLists)" :key="listType">
               <div v-if="newEventData.visibilityType === listType" class="mt-2 relative">
                 <label class="block text-sm font-medium mb-1">Select {{ listType }}</label>
-                <div @click="toggleDropdown(listType)" class="border p-2 rounded cursor-pointer dark:bg-darkBlue bg-white">
+                <div @click="toggleDropdown(listType)" class="p-2 border border-gray-400 rounded bg-white w-full dark:bg-darkBlue text-gray-700 dark:text-white outline-none shadow-inner">
                   <span v-if="newEventData.visibilityValue.length">
                     {{ newEventData.visibilityValue.join(', ') }}
                   </span>
@@ -225,14 +227,14 @@ const toggleSelectAll = (listType) => {
           <div>
             <label class="block text-sm font-medium mb-1">Notes</label>
             <textarea v-model="newEventData.note" rows="1"
-              class="p-2 border border-gray-400 rounded bg-white w-full dark:bg-darkBlue text-gray-700 dark:text-white outline-none resize-none overflow-y-scroll"></textarea>
+              class="p-2 border border-gray-400 rounded bg-white w-full h-28 dark:bg-darkBlue text-gray-700 dark:text-white outline-none resize-none overflow-y-scroll shadow-inner"></textarea>
           </div>
         </div>
 
         <div class="flex justify-end space-x-2 pt-4">
           <button @click="$emit('cancel')"
-            class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 text-black">Cancel</button>
-          <button @click="$emit('save-event')" class="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white">Save</button>
+            class="px-4 py-2 rounded dark:bg-darkBrown bg-warmYellow/70 border border-darkOrange dark:text-darkOrange text-black shadow-outer">Cancel</button>
+          <button @click="$emit('save-event')" class="px-4 py-2 rounded dark:bg-darkGreen bg-pigmentGreen border border-lightGreen dark:text-lightGreen text-white shadow-outer">Save</button>
         </div>
       </div>
     </div>

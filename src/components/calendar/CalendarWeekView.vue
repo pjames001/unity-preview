@@ -7,6 +7,8 @@ const props = defineProps({
   getWeekDays: Function
 });
 
+const emit = defineEmits(['add-event'])
+
 // --- State Management ---
 const activeDayIndex = ref(null);
 const activeTitle = ref(null);
@@ -83,13 +85,21 @@ const toggleActiveSummary = (index, title) => {
 
 <template>
   <div class="bg-white dark:bg-darkPurple p-4 rounded-lg shadow-inner relative z-10 min-h-max">
-    <h3 class="text-lg font-semibold mb-4 dark:text-white text-gray-800">
-      Events for Week of {{ selectedDate }}
-    </h3>
+      <h3 class="text-lg font-semibold dark:text-white text-gray-800">
+        Events for Week of {{ selectedDate }}
+      </h3>
+    
     <div class="grid grid-cols-7 gap-4 h-min">
       <div v-for="(day, index) in weekDaysWithSummary" :key="index"
         class="bg-gray-200 dark:bg-[#333] shadow-inner rounded-lg p-2 relative">
-        <h4 class="text-sm font-bold mb-2 dark:text-white text-gray-700">{{ day.dateStr }}</h4>
+        <h4 class="text-sm text-center font-bold mb-2 dark:text-white text-gray-700">{{ day.dateStr }}</h4>
+
+        <button
+          class="dark:bg-darkGreen bg-pigmentGreen border dark:border-lightGreen border-lightGreen dark:text-lightGreen text-white text-xs font-medium mb-4 w-full h-6 rounded shadow-outer transition"
+          @click="emit('add-event')"
+        >
+          Add Event +
+        </button>
 
         <div v-if="day.eventSummary.length > 0" class="space-y-1">
           <div v-for="summary in day.eventSummary" :key="summary.title"
@@ -101,7 +111,7 @@ const toggleActiveSummary = (index, title) => {
           </div>
         </div>
 
-        <div v-else class="text-gray-400 text-xs">No events</div>
+        <div v-else class="text-gray-400 text-xs text-center">No events</div>
       </div>
     </div>
 

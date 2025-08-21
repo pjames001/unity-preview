@@ -130,44 +130,29 @@ const formatDate = (date) => {
 const formatTime = (date) => {
   return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
-
-// --- Custom Directives ---
-const vClickOutside = {
-  mounted(el, binding) {
-    el.clickOutsideEvent = (event) => {
-      if (!(el === event.target || el.contains(event.target))) {
-        binding.value();
-      }
-    };
-    document.addEventListener('click', el.clickOutsideEvent);
-  },
-  unmounted(el) {
-    document.removeEventListener('click', el.clickOutsideEvent);
-  },
-};
 </script>
 
 <template>
   <section class="p-6 my-10 w-full rounded-xl shadow-outer dark:bg-darkBrown bg-warmYellow/70 border border-darkOrange">
     <div class="p-4 bg-white dark:bg-gray-900 rounded-xl shadow-md">
       <div class="flex justify-between items-center mb-4">
-        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">Add Reminder</button>
+        <button class="dark:bg-darkGreen bg-pigmentGreen border border-lightGreen dark:text-lightGreen text-white px-4 py-2 font-medium rounded-md text-sm shadow-outer">Add Reminder</button>
         <div class="space-x-2">
           <button
             @click="filterStatus = 'all'"
-            :class="['px-3 py-1 text-sm rounded-md', { 'bg-blue-600 text-white': filterStatus === 'all', 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500': filterStatus !== 'all' }]"
+            :class="['px-3 py-1 text-sm rounded-md border font-medium', { ' font-medium dark:bg-darkBrown bg-warmYellow/70 border-darkOrange dark:text-darkOrange text-gray-800 shadow-inner': filterStatus === 'all', 'shadow-outer dark:bg-gray-800 bg-gray-200 dark:border-none border-gray-700 dark:text-white text-gray-700': filterStatus !== 'all' }]"
           >All Reminders</button>
           <button
             @click="filterStatus = 'upcoming-reminders'"
-            :class="['px-3 py-1 text-sm rounded-md', { 'bg-blue-600 text-white': filterStatus === 'upcoming-reminders', 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500': filterStatus !== 'upcoming-reminders' }]"
+            :class="['px-3 py-1 text-sm rounded-md border font-medium', { ' font-medium dark:bg-darkBrown bg-warmYellow/70 border-darkOrange dark:text-darkOrange text-gray-800 shadow-inner': filterStatus === 'upcoming-reminders', 'shadow-outer dark:bg-gray-800 bg-gray-200 dark:border-none border-gray-700 dark:text-white text-gray-700': filterStatus !== 'upcoming-reminders' }]"
           >Upcoming Reminders</button>
           <button
             @click="filterStatus = 'completed'"
-            :class="['px-3 py-1 text-sm rounded-md', { 'bg-blue-600 text-white': filterStatus === 'completed', 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500': filterStatus !== 'completed' }]"
+            :class="['px-3 py-1 text-sm rounded-md border font-medium', { ' font-medium dark:bg-darkBrown bg-warmYellow/70 border-darkOrange dark:text-darkOrange text-gray-800 shadow-inner': filterStatus === 'completed', 'shadow-outer dark:bg-gray-800 bg-gray-200 dark:border-none border-gray-700 dark:text-white text-gray-700': filterStatus !== 'completed' }]"
           >Completed</button>
           <button
             @click="filterStatus = 'passed-due-reminders'"
-            :class="['px-3 py-1 text-sm rounded-md', { 'bg-blue-600 text-white': filterStatus === 'passed-due-reminders', 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500': filterStatus !== 'passed-due-reminders' }]"
+            :class="['px-3 py-1 text-sm rounded-md border font-medium', { ' font-medium dark:bg-darkBrown bg-warmYellow/70 border-darkOrange dark:text-darkOrange text-gray-800 shadow-inner': filterStatus === 'passed-due-reminders', 'shadow-outer dark:bg-gray-800 bg-gray-200 dark:border-none border-gray-700 dark:text-white text-gray-700': filterStatus !== 'passed-due-reminders' }]"
           >Passed Due Reminders</button>
         </div>
       </div>
@@ -181,8 +166,8 @@ const vClickOutside = {
         />
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+      <div class="pb-20">
+        <table class="w-full text-left border border-gray-300 dark:border-gray-600 rounded-md">
           <thead class="bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200">
             <tr>
               <th
@@ -207,7 +192,7 @@ const vClickOutside = {
             <tr
               v-for="reminder in filteredReminders"
               :key="reminder.id"
-              class="border-t dark:bg-darkBlue bg-white border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 relative"
+              class="border-t dark:bg-darkBlue bg-white border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               <td class="px-4 py-2">{{ reminder.name }}</td>
               <td class="px-4 py-2">{{ reminder.priority }}</td>
@@ -217,32 +202,34 @@ const vClickOutside = {
               <td class="px-4 py-2">{{ reminder.frequency }}</td>
               <td class="px-4 py-2">{{ reminder.notes }}</td>
               <td class="px-4 py-2">{{ reminder.createdBy }}</td>
-              <td class="px-4 py-2 text-center relative" v-click-outside="() => (activeMenuId = null)">
-                <div class="inline-block relative">
-                  <button @click.stop="toggleMenu(reminder.id)" aria-haspopup="true" :aria-expanded="activeMenuId === reminder.id">
-                    <v-icon name="bi-three-dots-vertical" class="w-5 h-5 text-gray-500 hover:text-gray-800 dark:hover:text-white" />
-                  </button>
-                  <div
-                    v-if="activeMenuId === reminder.id"
-                    class="absolute w-32 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg rounded-md z-10 ring-1 ring-black ring-opacity-5 right-0 mt-2 origin-top-right"
-                  >
-                    <ul class="text-sm text-gray-700 dark:text-gray-200 py-1">
-                      <li
-                        v-if="activeReminder && !activeReminder.completed"
-                        @click="markAsComplete"
-                        class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
-                      >
-                        Complete
-                      </li>
-                      <li class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">Edit</li>
-                      <li
-                        @click="deleteReminder"
-                        class="px-4 py-2 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 cursor-pointer"
-                      >
-                        Delete
-                      </li>
-                    </ul>
-                  </div>
+              <td class="px-4 py-2 text-center relative">
+                <button
+                  @click.stop="toggleMenu(reminder.id)"
+                  aria-haspopup="true"
+                  :aria-expanded="activeMenuId === reminder.id"
+                >
+                  <v-icon name="bi-three-dots-vertical" class="w-5 h-5 text-gray-500 hover:text-gray-800 dark:hover:text-white" />
+                </button>
+                <div
+                  v-if="activeMenuId === reminder.id"
+                  class="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg rounded-md z-10 origin-top-right"
+                >
+                  <ul class="text-sm text-gray-700 dark:text-gray-200 py-1">
+                    <li
+                      v-if="activeReminder && !activeReminder.completed"
+                      @click="markAsComplete"
+                      class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
+                    >
+                      Complete
+                    </li>
+                    <li class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">Edit</li>
+                    <li
+                      @click="deleteReminder"
+                      class="px-4 py-2 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 cursor-pointer"
+                    >
+                      Delete
+                    </li>
+                  </ul>
                 </div>
               </td>
             </tr>

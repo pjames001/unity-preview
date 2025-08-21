@@ -43,7 +43,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { Chart, registerables } from 'chart.js'
 Chart.register(...registerables)
 
@@ -56,11 +56,12 @@ let animationFrameId = null
 
 const datasetLabels = [
   'Number of Calls',
-  'Touched Accounts',
+  'SA Sent',
+  // 'Touched Accounts',
   'Minutes',
-  'Total Collected',
+  // 'Total Collected',
   'Commission',
-  'Company Fees'
+  // 'Company Fees'
 ]
 
 const metricColors = [
@@ -68,8 +69,8 @@ const metricColors = [
   { base: [34, 197, 94], border: 'rgba(34, 197, 94, 1)' },
   { base: [234, 179, 8], border: 'rgba(234, 179, 8, 1)' },
   { base: [241, 136, 5], border: 'rgba(241, 136, 5, 1)' },
-  { base: [139, 92, 246], border: 'rgba(139, 92, 246, 1)' },
-  { base: [244, 63, 94], border: 'rgba(244, 63, 94, 1)' }
+  // { base: [139, 92, 246], border: 'rgba(139, 92, 246, 1)' },
+  // { base: [244, 63, 94], border: 'rgba(244, 63, 94, 1)' }
 ]
 
 const getMetricButtonStyle =(idx) => {
@@ -90,8 +91,8 @@ const rawDatasets = {
       [150, 120, 130, 160, 100, 150, 145],
       [90, 120, 110, 100, 140, 130, 100],
       [7500, 5500, 4750, 2500, 6500, 4500, 10000],
-      [300, 500, 600, 200, 100, 150, 700],
-      [10000, 1200, 15000, 3000, 900, 4000, 20000]
+      // [300, 500, 600, 200, 100, 150, 700],
+      // [10000, 1200, 15000, 3000, 900, 4000, 20000]
     ]
   },
   weekly: {
@@ -101,8 +102,8 @@ const rawDatasets = {
       [1020, 980, 890, 920],
       [640, 710, 730, 690],
       [38000, 42000, 35000, 36000],
-      [2100, 1800, 1600, 2000],
-      [34000, 22000, 31000, 25000]
+      // [2100, 1800, 1600, 2000],
+      // [34000, 22000, 31000, 25000]
     ]
   },
   monthly: {
@@ -112,8 +113,8 @@ const rawDatasets = {
       [5500, 5200, 5100, 5000, 4900, 4800, 4700, 4600, 4500, 4400, 4300, 4200],
       [4300, 4400, 4200, 4100, 4000, 3900, 3800, 3700, 3600, 3500, 3400, 3300],
       [48000, 50000, 47000, 46000, 45000, 44000, 43000, 42000, 41000, 40000, 39000, 38000],
-      [3200, 3100, 3000, 2900, 2800, 2700, 2600, 2500, 2400, 2300, 2200, 2100],
-      [52000, 50000, 49000, 48000, 47000, 46000, 45000, 44000, 43000, 42000, 41000, 40000]
+      // [3200, 3100, 3000, 2900, 2800, 2700, 2600, 2500, 2400, 2300, 2200, 2100],
+      // [52000, 50000, 49000, 48000, 47000, 46000, 45000, 44000, 43000, 42000, 41000, 40000]
     ]
   }
 }
@@ -266,7 +267,9 @@ watch([activeRange, activeMetric], renderChart)
 let darkModeObserver = null
 
 onMounted(() => {
-  renderChart()
+  nextTick(() => {
+    renderChart()
+  })
   darkModeObserver = new MutationObserver(() => {
     renderChart()
   })

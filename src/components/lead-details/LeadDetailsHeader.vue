@@ -1,15 +1,21 @@
 <script setup>
 import { RouterLink } from 'vue-router';
 
+const props = defineProps({
+  accNumber: String,
+  age: String,
+  name: String,
+})
+
 </script>
 
 <template>
   <header class="grid grid-cols-2 p-4 w-full bg-transparent relative">
     <div class="flex flex-col justify-end gap-2 px-4">
-      <RouterLink to="/leads"
+      <RouterLink to="/"
         class="w-max flex justify-center items-center gap-2 dark:bg-darkRed bg-lightRed border dark:border-rawRed border-rawRed dark:text-rawRed text-white text-sm font-bold px-4 py-2 rounded-xl shadow-outer hover:scale-105 transition-all">
         <v-icon name="md-keyboardarrowleft" scale="1.1"></v-icon>
-        Back to Leads
+        Back to Dashboard
       </RouterLink>
 
       <div class="grid grid-cols-2 gap-6 my-6 w-[500px] bg-transparent">
@@ -58,9 +64,9 @@ import { RouterLink } from 'vue-router';
     <div class="flex flex-col justify-center items-center gap-3 absolute left-1/2 top-2 -translate-x-1/2">
       <h1
         class="text-center text-4xl dark:bg-darkBlue bg-lightBlue dark:text-lightBlue text-gray-200 py-4 px-8 rounded-lg border dark:border-lightBlue border-blue-700 shadow-outer font-medium">
-        Dummy Lead</h1>
-      <span class="dark:text-gray-200 text-gray-700 text-sm py-2 px-4 ">0 Years 21 Days</span>
-      <span class="dark:text-gray-200 text-gray-700 text-lg"><span class="dark:text-white text-gray-800 font-semibold">Account Number:</span> L-20250709-0003</span>
+        {{ name }}</h1>
+      <span class="dark:text-gray-200 text-gray-700 text-sm py-2 px-4 ">{{ age }}</span>
+      <span class="dark:text-gray-200 text-gray-700 text-lg"><span class="dark:text-white text-gray-800 font-semibold">Account Number:</span> {{ accNumber }}</span>
 
       <div class="flex items-center gap-2 my-4">
         <v-icon name="md-keyboarddoublearrowleft-round" scale="1.6" title="Last"

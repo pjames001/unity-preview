@@ -52,6 +52,7 @@ a,
 
 body, html {
   font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+  @apply dark:bg-darkBlue bg-white
 }
 
 * {
